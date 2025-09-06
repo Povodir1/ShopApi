@@ -12,7 +12,6 @@ class User(Base):
     name = Column(String, nullable=False)
     password_hash = Column(Text, nullable=False)
     email = Column(String, unique=True, nullable=False)
-    age = Column(Integer)
     money = Column(DECIMAL(10, 2), default=0)
     role = Column(String, default="user")
     created_at = Column(DateTime, default=datetime.now())
