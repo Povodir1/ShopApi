@@ -1,6 +1,14 @@
 from pydantic import BaseModel, EmailStr, condecimal
 from datetime import datetime
 
+
+
+class UserRegister(BaseModel):
+    name:str
+    email: EmailStr
+    password_hash:str
+
+
 class UserSchema(BaseModel):
     id: int
     name: str
@@ -10,4 +18,4 @@ class UserSchema(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

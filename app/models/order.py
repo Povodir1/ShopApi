@@ -4,7 +4,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, ForeignKey
 from sqlalchemy.orm import relationship
-from base import Base
+from app.models.base import Base
 
 
 class Order(Base):

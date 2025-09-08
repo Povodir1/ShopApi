@@ -1,7 +1,7 @@
 
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-from base import Base
+from app.models.base import Base
 
 
 class FavoriteItem(Base):

@@ -1,7 +1,7 @@
 
 from sqlalchemy import Column, Integer, String, ForeignKey,DECIMAL, Text
 from sqlalchemy.orm import relationship
-from base import Base
+from app.models.base import Base
 
 
 class Item(Base):
@@ -18,5 +18,5 @@ class Item(Base):
     comments = relationship("Comment", back_populates="items")
     order_items = relationship("OrderItem", back_populates="items")
     basket_items = relationship("BasketItem", back_populates="items")
-    favourites = relationship("FavouriteItem", back_populates="items")
+    favorites = relationship("FavoriteItem", back_populates="items")
     images = relationship("Image",back_populates="items")

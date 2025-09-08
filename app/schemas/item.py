@@ -1,4 +1,4 @@
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel, condecimal, Field
 from typing import Optional
 
 
@@ -8,8 +8,8 @@ class ItemSchema(BaseModel):
     price: condecimal(max_digits=10, decimal_places=2)
     info: Optional[str]
     image_id: int
-    stock: int
+    stock: int = Field(ge=0)
     category_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
