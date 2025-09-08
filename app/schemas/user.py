@@ -1,6 +1,9 @@
 from pydantic import BaseModel, EmailStr, condecimal
 from datetime import datetime
 
+class UserPatch(BaseModel):
+    name: str | None
+    password_hash: str | None
 
 
 class UserRegister(BaseModel):
@@ -19,3 +22,7 @@ class UserSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+
