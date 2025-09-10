@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, condecimal
 from datetime import datetime
-
+from typing import Optional
 
 class UserPatch(BaseModel):
-    name: str | None
-    password_hash: str | None
+    name: Optional[str] = None
+    password_hash: Optional[str] = None
 
 
 class UserLogin(BaseModel):

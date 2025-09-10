@@ -6,7 +6,7 @@ from app.config import settings
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-user_auth = OAuth2PasswordBearer(tokenUrl="/auth/token")
+user_auth = OAuth2PasswordBearer(tokenUrl="/token")
 
 def hash_pass(password:str):
     return pwd_context.hash(password)

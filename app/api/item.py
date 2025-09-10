@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException,status
+from app.services.item import get_item
+
 
 router = APIRouter(prefix="/items",tags=["Items"])
 
@@ -10,7 +12,11 @@ def get_item_all():
 
 @router.get("/{item_id}")
 def get_item_by_id(item_id):
-    pass
+    response = get_item(item_id)
+    if not response:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Item with id = {item_id} not found")
+    return response
 
 
 @router.post("/create")

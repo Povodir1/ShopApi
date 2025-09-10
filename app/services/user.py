@@ -3,7 +3,15 @@ from app.database import db_session
 from app.models.user import User
 from app.schemas.user import UserSchema, UserRegister, UserPatch,UserToken
 from pydantic import EmailStr
-from app.services.security import verify_pass, hash_pass
+from app.services.security import verify_pass, hash_pass, decode_token
+from fastapi import Depends
+from app.services.security import user_auth
+
+
+def user_by_token(token:str = Depends(user_auth)):
+    data = decode_token(token)
+    return UserToken(**data)
+
 
 def is_unique_email(email:EmailStr):
     with db_session() as session:
@@ -33,6 +41,8 @@ def create_user(user_data: UserRegister):
         return UserSchema.model_validate(user)
 
 def patch_user(user_id:int, new_data:UserPatch):
+    if new_data.password_hash:
+        new_data.password_hash = hash_pass(new_data.password_hash)
     with db_session() as session:
         user = session.query(User).filter(User.id == user_id).first()
         for key,value in new_data.model_dump(exclude_none=True).items():
