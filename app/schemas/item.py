@@ -6,13 +6,21 @@ class ItemCatalogSchema(BaseModel):
     id: int
     name: str
     images: ImageSchema | None = None
-    price: condecimal(max_digits=10, decimal_places=2)
-    rating: float | None
+    price: float = 0
+    rating: float | None = None
 
     class Config:
         from_attributes = True
 
 class ItemSoloSchema(ItemCatalogSchema):
-    info: Optional[str]
+    info: Optional[str] = None
     images: list[ImageSchema] | None = None
     stock: int = Field(ge=0)
+
+class ItemCreateSchema(BaseModel):
+    name: str
+    price: float = 0
+    info: Optional[str] = None
+    stock: int = Field(ge=0)
+    category_id:int = None
+
