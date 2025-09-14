@@ -1,6 +1,6 @@
 from fastapi import APIRouter,HTTPException,status
-from app.services.item import get_item, get_all_items, create_item
-from app.schemas.item import ItemCreateSchema
+from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item
+from app.schemas.item import ItemCreateSchema,ItemPatchSchema
 
 router = APIRouter(prefix="/items",tags=["Items"])
 
@@ -12,7 +12,7 @@ def get_item_all(limit:int):
 
 @router.get("/{item_id}")
 def get_item(item_id):
-    response = get_item(item_id)
+    response = serv_get_item(item_id)
     if not response:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Item with id = {item_id} not found")
@@ -26,10 +26,16 @@ def post_item(new_item: ItemCreateSchema):
 
 
 @router.patch("/{item_id}")
-def patch_item(item_id):
-    pass
+def patch_item(item_id:int,new_data: ItemPatchSchema):
+
+    return serv_patch_item(item_id,new_data)
 
 
 @router.delete("/{item_id}")
 def delete_item(item_id):
-    pass
+    response = serv_delete_item(item_id)
+    if not response:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Item with id = {item_id} not found")
+    return {"msg":"Item deleted"}
+

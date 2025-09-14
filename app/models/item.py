@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, ForeignKey,DECIMAL, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, DECIMAL, Text, Boolean
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -13,6 +13,7 @@ class Item(Base):
     info = Column(Text,nullable=False)
     stock = Column(Integer, default=0)
     category_id = Column(Integer, ForeignKey("categories.id"))
+    is_active = Column(Boolean, default=True)
 
     categories = relationship("Category", back_populates="items")
     comments = relationship("Comment", back_populates="items")

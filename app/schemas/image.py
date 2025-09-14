@@ -1,10 +1,13 @@
 from pydantic import BaseModel
 
 
-class ImageSchema(BaseModel):
-    id: int
-    url: str
-    is_main: bool
 
+class ImageOneSchema(BaseModel):
+    url: str
     class Config:
         from_attributes = True
+
+
+class ImageSchema(ImageOneSchema):
+    is_main: bool
+
