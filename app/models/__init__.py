@@ -5,7 +5,7 @@ from app.models.order import Order
 from app.models.category import Category
 from app.models.comment import Comment
 from app.models.image import Image
-from app.models.favourite import FavoriteItem
+from app.models.favorite import FavoriteItem
 from app.models.basket_item import BasketItem
 from app.models.order_item import OrderItem
 

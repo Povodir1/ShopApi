@@ -60,6 +60,8 @@ def serv_delete_item(item_id):
         if not item:
             return False
         item.is_active = False
+        #items_in_basket = item.basket_items
+        #session.delete(items_in_basket)
         return True
 
 
