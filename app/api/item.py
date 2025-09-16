@@ -1,5 +1,7 @@
+from http.client import responses
+
 from fastapi import APIRouter,HTTPException,status
-from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item
+from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories
 from app.schemas.item import ItemCreateSchema,ItemPatchSchema
 
 router = APIRouter(prefix="/items",tags=["Items"])
@@ -7,8 +9,13 @@ router = APIRouter(prefix="/items",tags=["Items"])
 
 @router.get("/all")
 def get_item_all(limit:int):
-    return get_all_items(limit)
+    response = get_all_items(limit)
+    return response
 
+@router.get("/category")
+def get_categories():
+    response = serv_get_categories()
+    return response
 
 @router.get("/{item_id}")
 def get_item(item_id):
@@ -21,14 +28,15 @@ def get_item(item_id):
 
 @router.post("/create")
 def post_item(new_item: ItemCreateSchema):
-    return create_item(new_item)
+    response = create_item(new_item)
+    return response
 
 
 
 @router.patch("/{item_id}")
 def patch_item(item_id:int,new_data: ItemPatchSchema):
-
-    return serv_patch_item(item_id,new_data)
+    response = serv_patch_item(item_id,new_data)
+    return response
 
 
 @router.delete("/{item_id}")

@@ -1,6 +1,6 @@
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema
-from app.models import Item
+from app.models import Item,Category
 from sqlalchemy.orm import joinedload
 
 
@@ -73,6 +73,12 @@ def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
         session.commit()
         session.refresh(item)
         return ItemSoloSchema.model_validate(item)
+
+
+def serv_get_categories():
+    with db_session() as session:
+        categories = session.query(Category).all()
+        return [category.name for category in categories]
 
 
 
