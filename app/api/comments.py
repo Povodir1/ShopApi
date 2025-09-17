@@ -12,21 +12,45 @@ def get_comments(item_id:int):
 
 @router.patch("/{item_id}")
 def patch_comments(item_id:int, user_id:int,new_data:CommentUpdateSchema):
-    response = serv_patch_comment(item_id,user_id,new_data)
-    return response
+    try:
+        response = serv_patch_comment(item_id,user_id,new_data)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}")
 
 @router.delete("/{item_id}")
 def delete_comments(item_id:int, user_id:int):
-    response = serv_delete_comment(item_id, user_id)
-    if not response:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Not found")
-    return {"msg": "Comment deleted"}
+    try:
+        serv_delete_comment(item_id, user_id)
+        return {"msg": "Comment deleted"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}")
 
 @router.post("/{item_id}")
 def post_comments(new_com:CommentCreateSchema):
-    response = serv_create_comment(new_com)
-    return response
+    try:
+        response = serv_create_comment(new_com)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}")
 
 
 

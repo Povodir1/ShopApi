@@ -7,6 +7,7 @@ from .api.comments import router as comment_router
 from .api.basket import router as basket_router
 from .api.order import router as order_router
 from .api.favorite import router as favorite_router
+
 app = FastAPI()
 
 app.include_router(user_router)

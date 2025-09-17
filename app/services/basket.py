@@ -2,7 +2,7 @@
 from app.database import db_session
 from app.models.basket_item import BasketItem
 from app.schemas.basket_item import BasketItemSchema
-
+from sqlalchemy.orm import joinedload
 
 def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
     with db_session() as session:
@@ -14,8 +14,7 @@ def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
         else:
             basket_item = BasketItem(user_id=user_id,item_id=item_id,count=count)
             session.add(basket_item)
-        session.commit()
-        session.flush(basket_item)
+        session.flush()
         if basket_item.items.comments:
             ratings = [com.rating for com in basket_item.items.comments if com.rating is not None]
             if ratings:
@@ -32,7 +31,8 @@ def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
 
 def serv_get_basket_items(user_id):
     with db_session() as session:
-        basket_items = session.query(BasketItem).filter(BasketItem.user_id == user_id).all()
+        basket_items = session.query(BasketItem).options(
+        joinedload(BasketItem.items)).filter(BasketItem.user_id == user_id).all()
         res_data = []
         for item in basket_items:
             if item.items.comments:
@@ -55,7 +55,7 @@ def serv_delete_from_basket(item_id:int,user_id:int):
     with db_session() as session:
         item = session.query(BasketItem).filter(BasketItem.user_id==user_id).filter(BasketItem.item_id==item_id).first()
         if not item:
-            return False
+            raise ValueError("Предмет не найден")
         session.delete(item)
         return True
 

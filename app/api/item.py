@@ -1,4 +1,3 @@
-from http.client import responses
 
 from fastapi import APIRouter,HTTPException,status
 from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories
@@ -19,11 +18,19 @@ def get_categories():
 
 @router.get("/{item_id}")
 def get_item(item_id):
-    response = serv_get_item(item_id)
-    if not response:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Item with id = {item_id} not found")
-    return response
+    try:
+        response = serv_get_item(item_id)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 
 @router.post("/create")
@@ -35,15 +42,35 @@ def post_item(new_item: ItemCreateSchema):
 
 @router.patch("/{item_id}")
 def patch_item(item_id:int,new_data: ItemPatchSchema):
-    response = serv_patch_item(item_id,new_data)
-    return response
+    try:
+        response = serv_patch_item(item_id,new_data)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 
 @router.delete("/{item_id}")
 def delete_item(item_id):
-    response = serv_delete_item(item_id)
-    if not response:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Item with id = {item_id} not found")
-    return {"msg":"Item deleted"}
+    try:
+        serv_delete_item(item_id)
+        return {"msg:":"Item deleted"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
+
 

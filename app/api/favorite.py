@@ -9,14 +9,33 @@ def get_favorite(user_id:int):
 
 @router.post("/{item_id}")
 def add_to_favorite(item_id:int,user_id:int):
-    response = serv_add_to_favorite(user_id,item_id)
-    return response
+    try:
+        response = serv_add_to_favorite(user_id,item_id)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @router.delete("/{item_id}")
 def delete_from_favorite(item_id,user_id):
-    response = serv_delete_from_favorite(item_id,user_id)
-    if not response:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Item with id = {item_id} not found")
-    return {"msg": "Item deleted"}
+    try:
+        serv_delete_from_favorite(item_id,user_id)
+        return {"msg": "Item deleted"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 

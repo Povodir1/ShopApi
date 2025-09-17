@@ -12,10 +12,15 @@ def token_json(tkn:str):
 
 @router.post("/token")
 def token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user_data = user_by_email_pass(form_data.username,form_data.password)
-    new_token = create_token(user_data.model_dump())
-    return token_json(new_token)
-
+    try:
+        user_data = user_by_email_pass(form_data.username,form_data.password)
+        new_token = create_token(user_data.model_dump())
+        return token_json(new_token)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 @router.post("/register")
 def register(user:UserRegister):

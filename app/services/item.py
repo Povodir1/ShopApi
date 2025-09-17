@@ -32,7 +32,8 @@ def serv_get_item(item_id:int):
     with db_session() as session:
         item = session.query(Item).options(joinedload(Item.comments),
                                            joinedload(Item.images)).filter(Item.id ==item_id).filter(Item.is_active == True).first()
-        if not item: return False
+        if not item:
+            raise ValueError("Item not found")
         if item.comments:
             ratings = [com.rating for com in item.comments if com.rating is not None]
             if ratings:
@@ -58,7 +59,7 @@ def serv_delete_item(item_id):
     with db_session() as session:
         item = session.query(Item).filter(Item.id == item_id).filter(Item.is_active == True).first()
         if not item:
-            return False
+            raise ValueError("Item not found")
         item.is_active = False
         #items_in_basket = item.basket_items
         #session.delete(items_in_basket)
@@ -68,10 +69,11 @@ def serv_delete_item(item_id):
 def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
     with db_session() as session:
         item = session.query(Item).filter(Item.id == item_id).first()
+        if not item:
+            raise ValueError("Item not found")
         for key,value in new_data.model_dump(exclude_none=True).items():
             setattr(item,key,value)
-        session.commit()
-        session.refresh(item)
+        session.flush()
         return ItemSoloSchema.model_validate(item)
 
 

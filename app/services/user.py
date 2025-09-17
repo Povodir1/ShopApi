@@ -22,13 +22,17 @@ def is_unique_email(email:EmailStr):
 def user_by_email_pass(email:str,password:str):
     with db_session() as session:
         user = session.query(User).filter(User.email == email).first()
+        if not user:
+            raise ValueError("Нет пользователя с таким email")
         if not verify_pass(password,user.password_hash):
-            return False
+            raise ValueError("Неверный пароль")
         return UserToken.model_validate(user)
 
 def get_user(user_id):
     with db_session() as session:
         user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("Нет пользователя с таким id")
         return UserSchema.model_validate(user)
 
 def create_user(user_data: UserRegister):
@@ -36,8 +40,7 @@ def create_user(user_data: UserRegister):
     user.password_hash = hash_pass(user_data.password_hash  )
     with db_session() as session:
         session.add(user)
-        session.commit()
-        session.refresh(user)
+        session.flush()
         return UserSchema.model_validate(user)
 
 def patch_user(user_id:int, new_data:UserPatch):
@@ -45,6 +48,8 @@ def patch_user(user_id:int, new_data:UserPatch):
         new_data.password_hash = hash_pass(new_data.password_hash)
     with db_session() as session:
         user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("Нет пользователя с таким id")
         for key,value in new_data.model_dump(exclude_none=True).items():
             setattr(user,key,value)
         session.commit()

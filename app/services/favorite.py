@@ -7,12 +7,11 @@ def serv_add_to_favorite(user_id:int,item_id:int):
         existing_item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id).filter(FavoriteItem.item_id==item_id).first()
 
         if existing_item:
-            return True
+            raise ValueError("Предмет уже в избранном")
         else:
             favorite_item = FavoriteItem(user_id=user_id,item_id=item_id)
             session.add(favorite_item)
-        session.commit()
-        session.flush(favorite_item)
+        session.flush()
         if favorite_item.items.comments:
             ratings = [com.rating for com in favorite_item.items.comments if com.rating is not None]
             if ratings:
@@ -54,6 +53,6 @@ def serv_delete_from_favorite(item_id:int,user_id:int):
     with db_session() as session:
         item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id).filter(FavoriteItem.item_id==item_id).first()
         if not item:
-            return False
+            raise ValueError("Предмет не найден")
         session.delete(item)
         return True
