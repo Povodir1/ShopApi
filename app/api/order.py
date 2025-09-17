@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException,status
 from app.services.order import serv_create_order,serv_get_all_orders
 
 router = APIRouter(prefix="/order",tags=["Order"])
@@ -12,5 +12,16 @@ def get_my_order(user_id:int):
 
 @router.post("/create")
 def create_order(user_id:int):
-    response = serv_create_order(user_id)
-    return response
+    try:
+        response = serv_create_order(user_id)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
