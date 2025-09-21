@@ -7,8 +7,18 @@ from .api.comments import router as comment_router
 from .api.basket import router as basket_router
 from .api.order import router as order_router
 from .api.favorite import router as favorite_router
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(title="E-Shop API", version="1.0.0")
+
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Разрешает все домены (для разработки)
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешает все HTTP методы
+    allow_headers=["*"],  # Разрешает все заголовки
+)
 
 app.include_router(user_router)
 app.include_router(item_router)

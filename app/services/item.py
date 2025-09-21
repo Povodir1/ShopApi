@@ -1,3 +1,5 @@
+
+
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema
 from app.models import Item,Category
@@ -5,10 +7,13 @@ from sqlalchemy.orm import joinedload
 
 
 
-def get_all_items(limit_num:int):
+def get_all_items(limit_num:int ,to_decrease:bool,to_increase:bool,by_rating:bool,min_price:float,max_price:float):
     with db_session() as session:
         items = session.query(Item).options(joinedload(Item.comments),
-                                           joinedload(Item.images)).filter(Item.is_active == True).limit(limit_num).all()
+                                           joinedload(Item.images)).filter(Item.is_active == True,
+                                                                           Item.price >= min_price,
+                                                                           Item.price <= max_price).limit(limit_num).all()
+
         res_data = []
         for item in items:
             if item.comments:
@@ -24,6 +29,14 @@ def get_all_items(limit_num:int):
                     res_images = None
             res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
                                  price=item.price, rating=rating))
+
+        # соотировка по запросу
+        if to_decrease: res_data.sort(key=lambda x: x.price,reverse=False)
+        elif to_increase: res_data.sort(key=lambda x: x.price,reverse=True)
+        elif by_rating: res_data.sort(key=lambda x: x.rating,reverse=True)
+        else:
+            raise ValueError("Не указан тип сортировки")
+
         return res_data
 
 

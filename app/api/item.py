@@ -1,3 +1,4 @@
+from json.encoder import INFINITY
 
 from fastapi import APIRouter,HTTPException,status
 from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories
@@ -7,8 +8,8 @@ router = APIRouter(prefix="/items",tags=["Items"])
 
 
 @router.get("/all")
-def get_item_all(limit:int):
-    response = get_all_items(limit)
+def get_item_all(limit:int = 20,to_decrease:bool=False,to_increase:bool = False,by_rating:bool=True,min_price:float=0,max_price:float=float('inf')):
+    response = get_all_items(limit,to_decrease, to_increase ,by_rating,min_price,max_price)
     return response
 
 @router.get("/category")

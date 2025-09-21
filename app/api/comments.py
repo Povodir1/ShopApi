@@ -3,7 +3,6 @@ from app.services.comments import serv_get_comments,serv_patch_comment,serv_dele
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
-#юзер по токену
 
 @router.get("/{item_id}")
 def get_comments(item_id:int):
