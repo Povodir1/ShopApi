@@ -20,7 +20,7 @@ def serv_add_to_favorite(user_id:int,item_id:int):
             rating = None
         if favorite_item.items.images:
             try:
-                res_images = [im for im in favorite_item.items.images if im.is_main == True][0]
+                res_images = [im for im in favorite_item.items.images if im.is_main == True][0].url
             except:
                 res_images = None
         return FavouriteItemSchema(id = favorite_item.id,item_id = favorite_item.item_id,
@@ -41,7 +41,7 @@ def serv_get_favorite_items(user_id):
                 rating = None
             if item.items.images:
                 try:
-                    res_images = [im for im in item.items.images if im.is_main == True][0]
+                    res_images = [im for im in item.items.images if im.is_main == True][0].url
                 except:
                     res_images = None
             res_data.append(FavouriteItemSchema(id = item.id,item_id = item.item_id,

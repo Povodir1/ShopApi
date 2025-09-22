@@ -1,4 +1,3 @@
-from json.encoder import INFINITY
 
 from fastapi import APIRouter,HTTPException,status
 from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories
@@ -8,14 +7,26 @@ router = APIRouter(prefix="/items",tags=["Items"])
 
 
 @router.get("/all")
-def get_item_all(limit:int = 20,to_decrease:bool=False,to_increase:bool = False,by_rating:bool=True,min_price:float=0,max_price:float=float('inf')):
-    response = get_all_items(limit,to_decrease, to_increase ,by_rating,min_price,max_price)
-    return response
+def get_item_all(limit:int = 20,page:int = 1,to_decrease:bool=False,to_increase:bool = False,by_rating:bool=True,min_price:float=0,max_price:float=float('inf')):
+    try:
+        response = get_all_items(limit,page,to_decrease, to_increase ,by_rating,min_price,max_price)
+        return response
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @router.get("/category")
 def get_categories():
     response = serv_get_categories()
     return response
+
 
 @router.get("/{item_id}")
 def get_item(item_id):

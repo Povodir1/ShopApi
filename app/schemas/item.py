@@ -1,11 +1,11 @@
 from pydantic import BaseModel, condecimal, Field
 from typing import Optional
-from app.schemas.image import ImageSchema, ImageOneSchema
+from app.schemas.image import ImageSchema
 
 class ItemCatalogSchema(BaseModel):
     id: int
     name: str
-    images: ImageOneSchema | None = None
+    images: str | None = None
     price: float = 0
     rating: float | None = None
 

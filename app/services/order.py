@@ -5,6 +5,7 @@ from app.models.order_item import OrderItem
 from app.models.user import User
 from app.schemas.order import OrderSchema,OrderItemSchema
 
+
 def serv_create_order(user_id:int):
     with db_session() as session:
         #задать пустой заказ
@@ -49,7 +50,11 @@ def serv_create_order(user_id:int):
         order_items = session.query(OrderItem).filter(OrderItem.order_id == order.id).all()
 
         for item in order_items:
-            res_item_arr.append(OrderItemSchema(id = item.id,item_id = item.item_id,count = item.count,item_price = item.items.price))
+            res_images = None
+            if item.items.images:
+                main_images = [im for im in item.items.images if im.is_main]
+                res_images = main_images[0].url if main_images else None
+            res_item_arr.append(OrderItemSchema(item_id = item.item_id,item_name=item.items.name,item_image=res_images,count = item.count,item_price = item.items.price))
             res_price += item.items.price*item.count
 
         return OrderSchema(id = order.id, items = res_item_arr,price = res_price)
@@ -65,7 +70,13 @@ def serv_get_all_orders(user_id:int):
             res_item_arr = []
             res_price = 0
             for item in order.order_items:
-                res_item_arr.append(OrderItemSchema(id = item.id,item_id = item.item_id,count = item.count,item_price = item.items.price))
+
+                res_images = None
+                if item.items.images:
+                    main_images = [im for im in item.items.images if im.is_main]
+                    res_images = main_images[0].url if main_images else None
+
+                res_item_arr.append(OrderItemSchema(item_id = item.item_id,item_name=item.items.name,item_image=res_images,count = item.count,item_price = item.items.price))
                 res_price += item.items.price*item.count
             orders_arr.append(OrderSchema(id = order.id, items = res_item_arr,price = res_price))
         return orders_arr

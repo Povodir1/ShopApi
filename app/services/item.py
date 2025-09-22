@@ -7,12 +7,12 @@ from sqlalchemy.orm import joinedload
 
 
 
-def get_all_items(limit_num:int ,to_decrease:bool,to_increase:bool,by_rating:bool,min_price:float,max_price:float):
+def get_all_items(limit_num:int, page:int,to_decrease:bool,to_increase:bool,by_rating:bool,min_price:float,max_price:float):
     with db_session() as session:
         items = session.query(Item).options(joinedload(Item.comments),
                                            joinedload(Item.images)).filter(Item.is_active == True,
                                                                            Item.price >= min_price,
-                                                                           Item.price <= max_price).limit(limit_num).all()
+                                                                           Item.price <= max_price).all()
 
         res_data = []
         for item in items:
@@ -24,7 +24,7 @@ def get_all_items(limit_num:int ,to_decrease:bool,to_increase:bool,by_rating:boo
                 rating = None
             if item.images:
                 try:
-                    res_images = [im for im in item.images if im.is_main == True][0]
+                    res_images = [im for im in item.images if im.is_main == True][0].url
                 except:
                     res_images = None
             res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
@@ -34,9 +34,10 @@ def get_all_items(limit_num:int ,to_decrease:bool,to_increase:bool,by_rating:boo
         if to_decrease: res_data.sort(key=lambda x: x.price,reverse=False)
         elif to_increase: res_data.sort(key=lambda x: x.price,reverse=True)
         elif by_rating: res_data.sort(key=lambda x: x.rating,reverse=True)
+
         else:
             raise ValueError("Не указан тип сортировки")
-
+        res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
         return res_data
 
 

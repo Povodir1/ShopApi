@@ -23,7 +23,7 @@ def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
             rating = None
         if basket_item.items.images:
             try:
-                res_images = [im for im in basket_item.items.images if im.is_main == True][0]
+                res_images = [im for im in basket_item.items.images if im.is_main == True][0].url
             except:
                 res_images = None
         return BasketItemSchema(id = basket_item.id,item_id = basket_item.item_id,item_name = basket_item.items.name,images =res_images,
@@ -43,7 +43,7 @@ def serv_get_basket_items(user_id):
                 rating = None
             if item.items.images:
                 try:
-                    res_images = [im for im in item.items.images if im.is_main == True][0]
+                    res_images = [im for im in item.items.images if im.is_main == True][0].url
                 except:
                     res_images = None
             res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,images =res_images,

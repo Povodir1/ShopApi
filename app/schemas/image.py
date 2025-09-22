@@ -2,12 +2,9 @@ from pydantic import BaseModel
 
 
 
-class ImageOneSchema(BaseModel):
+
+class ImageSchema(BaseModel):
+    is_main: bool
     url: str
     class Config:
         from_attributes = True
-
-
-class ImageSchema(ImageOneSchema):
-    is_main: bool
-
