@@ -1,18 +1,29 @@
-
-
 from app.database import db_session
-from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema
+from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
 from app.models import Item,Category
 from sqlalchemy.orm import joinedload
+from enum import Enum
+
+class SortType(Enum):
+    by_rating = "По рейтингу"
+    to_increase = "Сначала дорогое"
+    to_decrease = "Сначала дешевое"
 
 
 
-def get_all_items(limit_num:int, page:int,to_decrease:bool,to_increase:bool,by_rating:bool,min_price:float,max_price:float):
+def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema):
     with db_session() as session:
-        items = session.query(Item).options(joinedload(Item.comments),
-                                           joinedload(Item.images)).filter(Item.is_active == True,
-                                                                           Item.price >= min_price,
-                                                                           Item.price <= max_price).all()
+        items_query = session.query(Item).options(joinedload(Item.comments),
+                                           joinedload(Item.images)).filter(Item.is_active == True)
+        #фильтрация
+        if filters.min_price:
+            items_query.filter(Item.price>=filters.min_price)
+        if filters.max_price:
+            items_query.filter(Item.price<=filters.max_price)
+        if filters.category:
+            items_query.filter(Item.categories == filters.category)
+
+        items = items_query.all()
 
         res_data = []
         for item in items:
@@ -31,12 +42,13 @@ def get_all_items(limit_num:int, page:int,to_decrease:bool,to_increase:bool,by_r
                                  price=item.price, rating=rating))
 
         # соотировка по запросу
-        if to_decrease: res_data.sort(key=lambda x: x.price,reverse=False)
-        elif to_increase: res_data.sort(key=lambda x: x.price,reverse=True)
-        elif by_rating: res_data.sort(key=lambda x: x.rating,reverse=True)
+        if sort_type == SortType.to_decrease:
+            res_data.sort(key=lambda x: x.price,reverse=False)
+        elif sort_type == SortType.to_increase:
+            res_data.sort(key=lambda x: x.price,reverse=True)
+        elif sort_type == SortType.by_rating:
+            res_data.sort(key=lambda x: x.rating,reverse=True)
 
-        else:
-            raise ValueError("Не указан тип сортировки")
         res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
         return res_data
 

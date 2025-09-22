@@ -1,15 +1,20 @@
 
+
 from fastapi import APIRouter,HTTPException,status
-from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories
-from app.schemas.item import ItemCreateSchema,ItemPatchSchema
+from fastapi import Query
+from fastapi.params import Depends
+
+from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories,SortType
+
+from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemFilterSchema,get_filters
 
 router = APIRouter(prefix="/items",tags=["Items"])
 
 
 @router.get("/all")
-def get_item_all(limit:int = 20,page:int = 1,to_decrease:bool=False,to_increase:bool = False,by_rating:bool=True,min_price:float=0,max_price:float=float('inf')):
+def get_item_all(filters:ItemFilterSchema = Depends(get_filters),limit:int = 20,page:int = 1,sort_type:SortType ="by_rating",):
     try:
-        response = get_all_items(limit,page,to_decrease, to_increase ,by_rating,min_price,max_price)
+        response = get_all_items(limit,page,sort_type,filters)
         return response
     except ValueError as e:
         raise HTTPException(

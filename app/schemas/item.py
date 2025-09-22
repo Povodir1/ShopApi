@@ -1,7 +1,7 @@
 from pydantic import BaseModel, condecimal, Field
 from typing import Optional
 from app.schemas.image import ImageSchema
-
+from fastapi import Query
 class ItemCatalogSchema(BaseModel):
     id: int
     name: str
@@ -38,4 +38,18 @@ class ItemPatchSchema(BaseModel):
     class Config:
         from_attributes = True
 
+class ItemFilterSchema(BaseModel):
+    min_price: int | None = Field(None, ge=0, description="Минимальная цена")
+    max_price: int | None = Field(None, ge=0, description="Максимальная цена")
+    category: int | None = Field(None, description="ID категории")
 
+def get_filters(
+    min_price: int | None = Query(None, ge=0),
+    max_price: int | None = Query(None, ge=0),
+    category: int | None = Query(None)
+) -> ItemFilterSchema:
+    return ItemFilterSchema(
+        min_price=min_price,
+        max_price=max_price,
+        category=category
+    )
