@@ -6,7 +6,8 @@ from sqlalchemy.orm import joinedload
 
 def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
     with db_session() as session:
-        existing_item = session.query(BasketItem).filter(BasketItem.user_id==user_id).filter(BasketItem.item_id==item_id).first()
+        existing_item = session.query(BasketItem).filter(BasketItem.user_id==user_id,
+                                                         BasketItem.item_id==item_id).first()
 
         if existing_item:
             existing_item.count += count
@@ -22,12 +23,15 @@ def serv_add_to_basket(user_id:int,item_id:int,count:int = 1):
         else:
             rating = None
         if basket_item.items.images:
-            try:
-                res_images = [im for im in basket_item.items.images if im.is_main == True][0].url
-            except:
+            res_images = [im for im in basket_item.items.images if im.is_main == True][0].url
+            if not res_images:
                 res_images = None
-        return BasketItemSchema(id = basket_item.id,item_id = basket_item.item_id,item_name = basket_item.items.name,images =res_images,
-                                count = basket_item.count,full_price = basket_item.count*basket_item.items.price,rating = rating)
+        else:
+            res_images = None
+        return BasketItemSchema(id = basket_item.id,item_id = basket_item.item_id,
+                                item_name = basket_item.items.name,images =res_images,
+                                count = basket_item.count,full_price = basket_item.count*basket_item.items.price,
+                                rating = rating)
 
 def serv_get_basket_items(user_id):
     with db_session() as session:
@@ -42,22 +46,25 @@ def serv_get_basket_items(user_id):
             else:
                 rating = None
             if item.items.images:
-                try:
-                    res_images = [im for im in item.items.images if im.is_main == True][0].url
-                except:
+                res_images = [im for im in item.items.images if im.is_main == True][0].url
+                if not res_images:
                     res_images = None
-            res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,images =res_images,
-                                count = item.count,full_price = item.count*item.items.price,rating = rating))
+            else:
+                res_images = None
+            res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,
+                                             images =res_images,count = item.count,
+                                             full_price = item.count*item.items.price,rating = rating))
         return res_data
 
 
 def serv_delete_from_basket(item_id:int,user_id:int):
     with db_session() as session:
-        item = session.query(BasketItem).filter(BasketItem.user_id==user_id).filter(BasketItem.item_id==item_id).first()
+        item = session.query(BasketItem).filter(BasketItem.user_id==user_id,
+                                                BasketItem.item_id==item_id).first()
         if not item:
             raise ValueError("Предмет не найден")
         session.delete(item)
-        return True
+
 
 
 

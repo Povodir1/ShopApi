@@ -1,15 +1,15 @@
 from fastapi import APIRouter, HTTPException,status
 from app.services.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
-from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema
+from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
 
-@router.get("/{item_id}")
+@router.get("/{item_id}",response_model=list[CommentSchema])
 def get_comments(item_id:int):
     response = serv_get_comments(item_id)
     return response
 
-@router.patch("/{item_id}")
+@router.patch("/{item_id}",response_model=CommentSchema)
 def patch_comments(item_id:int, user_id:int,new_data:CommentUpdateSchema):
     try:
         response = serv_patch_comment(item_id,user_id,new_data)
@@ -23,7 +23,7 @@ def patch_comments(item_id:int, user_id:int,new_data:CommentUpdateSchema):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}")
 
-@router.delete("/{item_id}")
+@router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_comments(item_id:int, user_id:int):
     try:
         serv_delete_comment(item_id, user_id)
@@ -37,7 +37,7 @@ def delete_comments(item_id:int, user_id:int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}")
 
-@router.post("/{item_id}")
+@router.post("/{item_id}",response_model=CommentSchema,status_code=status.HTTP_201_CREATED)
 def post_comments(new_com:CommentCreateSchema):
     try:
         response = serv_create_comment(new_com)

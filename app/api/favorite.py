@@ -1,13 +1,14 @@
 from fastapi import APIRouter,HTTPException,status
 from app.services.favorite import serv_get_favorite_items,serv_add_to_favorite,serv_delete_from_favorite
+from app.schemas.favorite import FavouriteItemSchema
 router = APIRouter(prefix="/favorite",tags = ["Favorite"])
 
-@router.get("")
+@router.get("",response_model=list[FavouriteItemSchema])
 def get_favorite(user_id:int):
     response = serv_get_favorite_items(user_id)
     return response
 
-@router.post("/{item_id}")
+@router.post("/{item_id}",response_model=FavouriteItemSchema,status_code=status.HTTP_201_CREATED)
 def add_to_favorite(item_id:int,user_id:int):
     try:
         response = serv_add_to_favorite(user_id,item_id)
@@ -23,7 +24,7 @@ def add_to_favorite(item_id:int,user_id:int):
             detail=f"Internal server error: {str(e)}"
         )
 
-@router.delete("/{item_id}")
+@router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_from_favorite(item_id,user_id):
     try:
         serv_delete_from_favorite(item_id,user_id)

@@ -22,7 +22,7 @@ def token(form_data: OAuth2PasswordRequestForm = Depends()):
             detail=str(e)
         )
 
-@router.post("/register")
+@router.post("/register",status_code=status.HTTP_201_CREATED)
 def register(user:UserRegister):
     if not is_unique_email(user.email):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,

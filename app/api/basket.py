@@ -1,16 +1,16 @@
 from fastapi import APIRouter
 from fastapi import HTTPException,status
 from app.services.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
-
+from app.schemas.basket_item import BasketItemSchema
 router = APIRouter(prefix="/basket",tags=["Basket"])
 
 
-@router.get("")
+@router.get("",response_model=list[BasketItemSchema])
 def get_basket(user_id:int):
     response = serv_get_basket_items(user_id)
     return response
 
-@router.post("/{item_id}")
+@router.post("/{item_id}",response_model=BasketItemSchema,status_code=status.HTTP_201_CREATED)
 def add_to_basket(item_id:int,user_id:int):
     try:
         response = serv_add_to_basket(user_id,item_id)
@@ -21,7 +21,7 @@ def add_to_basket(item_id:int,user_id:int):
             detail=f"Internal server error: {str(e)}"
         )
 
-@router.delete("/{item_id}")
+@router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_from_basket(item_id,user_id):
     try:
         serv_delete_from_basket(item_id,user_id)

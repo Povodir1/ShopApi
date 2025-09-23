@@ -4,7 +4,8 @@ from app.schemas.favorite import FavouriteItemSchema
 
 def serv_add_to_favorite(user_id:int,item_id:int):
     with db_session() as session:
-        existing_item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id).filter(FavoriteItem.item_id==item_id).first()
+        existing_item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id,
+                                                           FavoriteItem.item_id==item_id).first()
 
         if existing_item:
             raise ValueError("Предмет уже в избранном")
@@ -45,13 +46,15 @@ def serv_get_favorite_items(user_id):
                 except:
                     res_images = None
             res_data.append(FavouriteItemSchema(id = item.id,item_id = item.item_id,
-                                                item_name = item.items.name,images =res_images,rating = rating))
+                                                item_name = item.items.name,images =res_images,
+                                                rating = rating))
         return res_data
 
 
 def serv_delete_from_favorite(item_id:int,user_id:int):
     with db_session() as session:
-        item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id).filter(FavoriteItem.item_id==item_id).first()
+        item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id,
+                                                  FavoriteItem.item_id==item_id).first()
         if not item:
             raise ValueError("Предмет не найден")
         session.delete(item)
