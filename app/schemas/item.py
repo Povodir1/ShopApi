@@ -1,4 +1,4 @@
-from pydantic import BaseModel, condecimal, Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from app.schemas.image import ImageSchema
 from fastapi import Query

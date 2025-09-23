@@ -17,11 +17,11 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
                                            joinedload(Item.images)).filter(Item.is_active == True)
         #фильтрация
         if filters.min_price:
-            items_query.filter(Item.price>=filters.min_price)
+            items_query = items_query.filter(Item.price>=filters.min_price)
         if filters.max_price:
-            items_query.filter(Item.price<=filters.max_price)
+            items_query = items_query.filter(Item.price<=filters.max_price)
         if filters.category:
-            items_query.filter(Item.categories == filters.category)
+            items_query = items_query.filter(Item.category_id == filters.category)
 
         items = items_query.all()
 
@@ -106,7 +106,7 @@ def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
 def serv_get_categories():
     with db_session() as session:
         categories = session.query(Category).all()
-        return [category.name for category in categories]
+        return [{category.name:int(category.id)} for category in categories]
 
 
 

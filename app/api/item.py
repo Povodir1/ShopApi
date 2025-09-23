@@ -12,7 +12,7 @@ router = APIRouter(prefix="/items",tags=["Items"])
 
 
 @router.get("/all")
-def get_item_all(filters:ItemFilterSchema = Depends(get_filters),limit:int = 20,page:int = 1,sort_type:SortType ="by_rating",):
+def get_item_all(filters:ItemFilterSchema = Depends(get_filters),limit:int = 20,page:int = 1,sort_type:SortType = SortType.by_rating):
     try:
         response = get_all_items(limit,page,sort_type,filters)
         return response
