@@ -1,6 +1,6 @@
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
-from app.models import Item,Category
+from app.models import Item, Category, Image
 from sqlalchemy.orm import joinedload
 from enum import Enum
 
@@ -76,12 +76,15 @@ def serv_get_item(item_id:int):
 
 
 def create_item(add_item:ItemCreateSchema):
+    if len([el for el in add_item.images if el.is_main == True]) != 1:
+        raise ValueError("Не выбрана/выбрано силшком много главных картинок")
     with db_session() as session:
-        item = Item(**add_item.model_dump())
+        item = Item(name = add_item.name,info = add_item.info,price = add_item.price,stock = add_item.stock,category_id = add_item.category_id)
         session.add(item)
         session.commit()
         session.flush(item)
-
+        images = [Image(url = im.url, is_main = im.is_main,item_id = item.id) for im in add_item.images]
+        session.add_all(images)
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images,
                               price = item.price,rating = None,info= item.info,stock = item.stock)
 

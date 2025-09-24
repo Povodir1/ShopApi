@@ -20,9 +20,10 @@ class ItemSoloSchema(ItemCatalogSchema):
 class ItemCreateSchema(BaseModel):
     name: str
     price: float = 0
-    info: Optional[str] = None
+    info: str|None = None
+    images: list[ImageSchema] | None = None
     stock: int = Field(ge=0)
-    category_id:int = None
+    category_id:int|None = None
 
     class Config:
         from_attributes = True
