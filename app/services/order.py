@@ -4,7 +4,7 @@ from app.models.basket_item import BasketItem
 from app.models.order_item import OrderItem
 from app.models.user import User
 from app.schemas.order import OrderSchema,OrderItemSchema
-
+from app.services.emai_sender import send_email
 
 def serv_create_order(user_id:int):
     with db_session() as session:
@@ -59,6 +59,9 @@ def serv_create_order(user_id:int):
                                                 item_image=res_images,count = item.count,
                                                 item_price = item.items.price))
             res_price += item.items.price*item.count
+
+        #отправить сообщение
+        send_email(user.email,"вы сделали такой-то такой-то заказ","New Order")
 
         return OrderSchema(id = order.id, items = res_item_arr,price = res_price)
 

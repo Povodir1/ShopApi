@@ -15,11 +15,11 @@ def user_by_token(token:str = Depends(user_auth)):
 
 def is_unique_email(email:EmailStr):
     with db_session() as session:
-        data = [el[0] for el in session.query(User.email).all()]
-        return False if email in data else True
+        user = session.query(User).filter(User.email == email).first()
+        return False if user else True
 
 
-def user_by_email_pass(email:str,password:str):
+def user_by_email_pass(email:str|EmailStr,password:str):
     with db_session() as session:
         user = session.query(User).filter(User.email == email).first()
         if not user:

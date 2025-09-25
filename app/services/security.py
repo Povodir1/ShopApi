@@ -1,3 +1,4 @@
+import random
 import time
 
 from jose import jwt
@@ -25,4 +26,5 @@ def decode_token(token:str):
     return payload
 
 
-
+def access_code():
+    return str(random.randint(100000,999999))
