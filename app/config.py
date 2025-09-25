@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     EMAIL_PASSWORD:str
     REDIS_HOST: str
     REDIS_PORT: int
-    REDIS_DB: int
     REDIS_IS_DECODE:bool
 
 settings = Settings()

@@ -29,9 +29,15 @@ def create_clear_db():
 def delete_db():
     Base.metadata.drop_all(engine)
 
-client = redis.Redis(host=settings.REDIS_HOST,
+auth_clients = redis.Redis(host=settings.REDIS_HOST,
                      port = settings.REDIS_PORT,
-                     db = settings.REDIS_DB,
+                     db = 0,
                      decode_responses=settings.REDIS_IS_DECODE)
+
+password_reset_client = redis.Redis(host=settings.REDIS_HOST,
+                     port = settings.REDIS_PORT,
+                     db = 1,
+                     decode_responses=settings.REDIS_IS_DECODE)
+
 
 
