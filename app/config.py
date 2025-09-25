@@ -8,5 +8,9 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     EMAIL_SENDER:str
     EMAIL_PASSWORD:str
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_DB: int
+    REDIS_IS_DECODE:bool
 
 settings = Settings()
