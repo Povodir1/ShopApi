@@ -1,7 +1,9 @@
 from fastapi import APIRouter
-from fastapi import HTTPException,status
+from fastapi import HTTPException,status,Depends
 from app.services.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
+from app.services.user import user_by_token
 from app.schemas.basket_item import BasketItemSchema
+from app.schemas.user import UserToken
 router = APIRouter(prefix="/basket",tags=["Basket"])
 
 
@@ -22,7 +24,7 @@ def add_to_basket(item_id:int,user_id:int):
         )
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_from_basket(item_id,user_id):
+def delete_from_basket(item_id,user_id:int):
     try:
         serv_delete_from_basket(item_id,user_id)
         return {"msg": "Item deleted"}

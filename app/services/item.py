@@ -8,7 +8,7 @@ class SortType(Enum):
     by_rating = "По рейтингу"
     to_increase = "Сначала дорогое"
     to_decrease = "Сначала дешевое"
-
+    by_date = "Сначала новые"
 
 
 def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema):
@@ -40,8 +40,6 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
                     res_images = None
             else:
                 res_images = None
-            if item.id == 35:
-                print(item.images)
             res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
                                  price=item.price, rating=rating))
 
@@ -52,6 +50,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
             res_data.sort(key=lambda x: x.price,reverse=True)
         elif sort_type == SortType.by_rating:
             res_data.sort(key=lambda x: x.rating if x.rating else False,reverse=True)
+
 
         res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
         return res_data

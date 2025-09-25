@@ -22,14 +22,14 @@ def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema):
                              rating = comment.rating,created_at=comment.created_at,
                              updated_at=comment.updated_at)
 
-def serv_create_comment(data:CommentCreateSchema):
+def serv_create_comment(data:CommentCreateSchema,user_id:int):
         with db_session() as session:
-            is_available = session.query(Comment).filter(Comment.user_id == data.user_id,
+            is_available = session.query(Comment).filter(Comment.user_id == user_id,
                                                          Comment.item_id == data.item_id).first()
             if is_available:
                 raise ValueError("Ты уже написал комментарий")
 
-            comment = Comment(**data.model_dump())
+            comment = Comment(**data.model_dump(),user_id = user_id)
             session.add(comment)
             session.flush()
 

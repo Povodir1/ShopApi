@@ -17,7 +17,6 @@ class CommentUpdateSchema(BaseModel):
     message: Optional[str] = None
 
 class CommentCreateSchema(BaseModel):
-    user_id:int
     item_id:int
     message: Optional[str] = None
     rating:Optional[float] = None
