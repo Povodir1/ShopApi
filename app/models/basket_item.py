@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from datetime import datetime
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -8,6 +9,7 @@ class BasketItem(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     item_id = Column(Integer, ForeignKey("items.id"))
+    added_at =  Column(DateTime, default=datetime.now)
     count = Column(Integer, default=1)
 
     users = relationship("User", back_populates="basket_items")

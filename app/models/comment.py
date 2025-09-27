@@ -19,3 +19,4 @@ class Comment(Base):
 
     users = relationship("User", back_populates="comments")
     items = relationship("Item", back_populates="comments")
+    comment_medias = relationship("CommentMedia", back_populates="comments")

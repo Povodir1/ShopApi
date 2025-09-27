@@ -4,6 +4,7 @@ from app.models import Item, Category, Image
 from sqlalchemy.orm import joinedload
 from enum import Enum
 
+
 class SortType(Enum):
     by_rating = "По рейтингу"
     to_increase = "Сначала дорогое"
