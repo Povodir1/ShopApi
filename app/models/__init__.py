@@ -8,11 +8,11 @@ from app.models.image import Image
 from app.models.favorite import FavoriteItem
 from app.models.basket_item import BasketItem
 from app.models.order_item import OrderItem
-
-#from sqlalchemy import create_engine
-#from app.config import settings
-
-#engine = create_engine(settings.DB_URL)
-
-#Base.metadata.create_all(engine)
-#Base.metadata.drop_all(engine)
+from app.models.address import Address
+from app.models.attribute import Attribute
+from app.models.attribute_value import AttributeValue
+from app.models.comment_media import CommentMedia
+from app.models.item_tag import ItemTag
+from app.models.tag import Tag
+from app.models.user_activity import UserActivity
+from app.models.user_tag_preference import UserTagPreference

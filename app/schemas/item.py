@@ -16,7 +16,8 @@ class ItemCatalogSchema(BaseModel):
 
 class ItemSoloSchema(ItemCatalogSchema):
     info: Optional[str] = None
-    images: list[ImageSchema] | None = None
+    images: list[ImageSchema] = None
+    attributes: list[dict[str,str]] | None= None
     stock: int = Field(ge=0)
 
 class ItemCreateSchema(BaseModel):
@@ -25,6 +26,7 @@ class ItemCreateSchema(BaseModel):
     info: str|None = None
     images: list[ImageSchema] | None = None
     stock: int = Field(ge=0)
+    attributes: list[dict[str, str]] | None= None
     category_id:int|None = None
 
     class Config:
@@ -36,6 +38,7 @@ class ItemPatchSchema(BaseModel):
     info: Optional[str] = None
     stock: Optional[int] = None
     is_active: Optional[bool] = None
+    attributes: Optional[list[dict[str, str]]] = None
     category_id: Optional[int] = None
 
     class Config:

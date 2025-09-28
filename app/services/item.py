@@ -6,23 +6,42 @@ from enum import Enum
 
 
 class SortType(Enum):
-    by_rating = "По рейтингу"
-    to_increase = "Сначала дорогое"
-    to_decrease = "Сначала дешевое"
-    by_date = "Сначала новые"
+    by_rating = "rating_desc"
+    to_increase = "price_desc"
+    to_decrease = "price_asc"
+    by_date = "date_desc"
 
 
 def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema):
     with db_session() as session:
         items_query = session.query(Item).options(joinedload(Item.comments),
-                                                  joinedload(Item.images)).filter(Item.is_active == True)
+                                                  joinedload(Item.images),
+                                                  joinedload(Item.categories)).filter(Item.is_active == True)
         #фильтрация
         if filters.min_price:
             items_query = items_query.filter(Item.price >= filters.min_price)
         if filters.max_price:
             items_query = items_query.filter(Item.price <= filters.max_price)
         if filters.category:
-            items_query = items_query.filter(Item.category_id == filters.category)
+
+            def get_all_child_category_ids(category_id):
+                category_ids = [category_id]
+                child_categories = session.query(Category.id).filter(Category.parent_id == category_id).all()
+                for child in child_categories:
+                    category_ids.extend(get_all_child_category_ids(child.id))
+                return category_ids
+
+            all_category_ids = get_all_child_category_ids(filters.category)
+            items_query = items_query.filter(Item.category_id.in_(all_category_ids))
+
+        #сортировка по базовым полям
+        if sort_type == SortType.to_decrease:
+            items_query = items_query.order_by(Item.price)
+        elif sort_type == SortType.to_increase:
+            items_query = items_query.order_by(Item.price.desc())
+        elif sort_type == SortType.by_date:
+            items_query = items_query.order_by(Item.created_at)
+
 
         items = items_query.all()
 
@@ -44,16 +63,12 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
             res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
                                  price=item.price, rating=rating))
 
-        # соотировка по запросу
-        if sort_type == SortType.to_decrease:
-            res_data.sort(key=lambda x: x.price ,reverse=False)
-        elif sort_type == SortType.to_increase:
-            res_data.sort(key=lambda x: x.price,reverse=True)
-        elif sort_type == SortType.by_rating:
+        # соотировка по расчетным полям
+        if sort_type == SortType.by_rating:
             res_data.sort(key=lambda x: x.rating if x.rating else False,reverse=True)
 
-
         res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
+
         return res_data
 
 
@@ -71,10 +86,12 @@ def serv_get_item(item_id:int):
                 rating = round(sum(ratings) / len(ratings),1)
         else:
             rating = None
-        return ItemSoloSchema(id = item.id,name = item.name,images = item.images,
+        attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' '+ attr.unit if attr.unit is not None else ''}"} for attr in item.attributes_value]
+
+        return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
                               price = item.price,rating = rating,info= item.info,stock = item.stock)
 
-
+#старое
 def create_item(add_item:ItemCreateSchema):
     if len([el for el in add_item.images if el.is_main == True]) != 1:
         raise ValueError("Не выбрана/выбрано силшком много главных картинок")
@@ -101,7 +118,7 @@ def serv_delete_item(item_id):
             for i in items_in_basket:
                 session.delete(i)
 
-
+#старое
 def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
     with db_session() as session:
         item = session.query(Item).filter(Item.id == item_id,
@@ -117,7 +134,15 @@ def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
 def serv_get_categories():
     with db_session() as session:
         categories = session.query(Category).all()
-        return [{category.name:int(category.id)} for category in categories]
 
+        category_dict = {cat.id: {'id': cat.id, 'name': cat.name, 'parent_id': cat.parent_id, 'children': []}
+                         for cat in categories}
 
+        root_categories = []
+        for cat in categories:
+            if cat.parent_id and cat.parent_id in category_dict:
+                category_dict[cat.parent_id]['children'].append(category_dict[cat.id])
+            else:
+                root_categories.append(category_dict[cat.id])
 
+        return root_categories

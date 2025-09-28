@@ -48,7 +48,6 @@ def get_item(item_id):
             detail=f"Internal server error: {str(e)}"
         )
 
-
 @router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED)
 def post_item(new_item: ItemCreateSchema):
     try:

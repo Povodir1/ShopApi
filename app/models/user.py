@@ -3,7 +3,15 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, Text, Boolean
 from sqlalchemy.orm import relationship
 from app.models.base import Base
+import enum
 
+class LanguageList(enum.Enum):
+    ru = "russian"
+    en = "english"
+
+class CurrencyType(enum.Enum):
+    byn = "BYN"
+    usd = "USD"
 
 class User(Base):
     __tablename__ = "users"
