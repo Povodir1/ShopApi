@@ -1,15 +1,17 @@
 from fastapi import APIRouter
 from fastapi import HTTPException,status,Depends
 from app.services.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
-from app.services.user import user_by_token
+from app.services.user import user_by_token_optional
 from app.schemas.basket_item import BasketItemSchema
 from app.schemas.user import UserToken
 router = APIRouter(prefix="/basket",tags=["Basket"])
 
 
 @router.get("",response_model=list[BasketItemSchema])
-def get_basket(user_id:int):
-    response = serv_get_basket_items(user_id)
+def get_basket(user:UserToken|None = Depends(user_by_token_optional)):
+    if not user:
+        return []
+    response = serv_get_basket_items(user.id)
     return response
 
 @router.post("/{item_id}",response_model=BasketItemSchema,status_code=status.HTTP_201_CREATED)

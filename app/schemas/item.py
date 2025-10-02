@@ -26,7 +26,7 @@ class ItemCreateSchema(BaseModel):
     info: str|None = None
     images: list[ImageSchema] | None = None
     stock: int = Field(ge=0)
-    attributes: list[dict[str, str]] | None= None
+    attributes: dict[str, str] | None= None
     category_id:int|None = None
 
     class Config:

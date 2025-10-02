@@ -17,11 +17,8 @@ def token_json(tkn:str):
             "token_type": "bearer"}
 
 
-def code_ver(data_json,code):
-    if not data_json:
-        raise ValueError("Код не найден или истек срок действия")
+def code_ver(data,code):
     try:
-        data = json.loads(data_json)
         stored_code = data.get("code")
         if str(stored_code) != str(code):
             raise ValueError("неверный код подтверждения")
@@ -35,6 +32,7 @@ def create_code(email:EmailStr,redis_db,ttl,new_data:dict|None = None):
     code = access_code()
 
     new_data["code"] = code
+    new_data["try_counts"] = 3
     data = new_data
     data_json = json.dumps(data)
     if redis_db.exists(email):
@@ -71,8 +69,17 @@ def verify_code(email:EmailStr,code:str):
     data_json = auth_clients.get(email)
 
     try:
-        code_ver(data_json,code)
         data = json.loads(data_json)
+        if not data_json:
+            raise ValueError("Код не найден или истек срок действия")
+        #
+        if data.get("try_counts") ==0:
+            auth_clients.delete(email)
+            raise ValueError("Код больше не действителен")
+        data["try_counts"] -= 1
+        auth_clients.set(email, json.dumps(data))
+        #
+        code_ver(data,code)
         user_data = data.get("user")
         auth_clients.delete(email)
     except Exception as e:
@@ -95,7 +102,13 @@ def forgot_password(email:EmailStr):
 def verify_code_for_pass(email:EmailStr,code:str):
     data_json = password_reset_client.get(email)
     try:
-        code_ver(data_json, code)
+        data = json.loads(data_json)
+        if data.get("try_counts") ==0:
+            password_reset_client.delete(email)
+            raise ValueError("Код больше не действителен")
+        data["try_counts"] -= 1
+        password_reset_client.set(email, json.dumps(data))
+        code_ver(data, code)
         return {"msg":"go to '/reset_password/confirm' to confirm new password"}
     except Exception as e:
         raise HTTPException(

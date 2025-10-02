@@ -1,5 +1,4 @@
 import random
-import time
 
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
@@ -10,6 +9,7 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 user_auth = OAuth2PasswordBearer(tokenUrl="/token")
+user_auth_optional = OAuth2PasswordBearer(tokenUrl="/token", auto_error=False)
 
 def hash_pass(password:str):
     return pwd_context.hash(password)

@@ -3,15 +3,19 @@ from app.database import db_session
 from app.models.user import User
 from app.schemas.user import UserSchema, UserRegister, UserPatch,UserToken
 from pydantic import EmailStr
-from app.services.security import verify_pass, hash_pass, decode_token
+from app.services.security import verify_pass, hash_pass, decode_token, user_auth_optional,user_auth
 from fastapi import Depends
-from app.services.security import user_auth
 
 
 def user_by_token(token:str = Depends(user_auth)):
     data = decode_token(token)
     return UserToken(**data)
 
+def user_by_token_optional(token:str|None = Depends(user_auth_optional)):
+    if not token:
+        return None
+    data = decode_token(token)
+    return UserToken(**data)
 
 def is_unique_email(email:EmailStr):
     with db_session() as session:

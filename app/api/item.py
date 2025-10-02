@@ -1,13 +1,13 @@
-
+from typing import Annotated, Optional
 
 from fastapi import APIRouter,HTTPException,status
 
 from fastapi.params import Depends
 
 from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories,SortType
-
 from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemFilterSchema,get_filters,ItemCatalogSchema,ItemSoloSchema
-
+from app.schemas.user import UserToken
+from app.services.user import user_by_token_optional
 router = APIRouter(prefix="/items",tags=["Items"])
 
 
@@ -15,15 +15,17 @@ router = APIRouter(prefix="/items",tags=["Items"])
 def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
                  limit:int = 10,
                  page:int = 1,
-                 sort_type:SortType = SortType.by_rating):
+                 sort_type:SortType = SortType.by_rating,
+                 user:UserToken|None = Depends(user_by_token_optional)):
     try:
-        response = get_all_items(limit,page,sort_type,filters)
+        response = get_all_items(limit,page,sort_type,filters,user.id if user else None)
         return response
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
 
 
 @router.get("/category")
@@ -33,9 +35,9 @@ def get_categories():
 
 
 @router.get("/{item_id}",response_model=ItemSoloSchema)
-def get_item(item_id):
+def get_item(item_id,user:UserToken|None = Depends(user_by_token_optional)):
     try:
-        response = serv_get_item(item_id)
+        response = serv_get_item(item_id,user.id if user else None)
         return response
     except ValueError as e:
         raise HTTPException(

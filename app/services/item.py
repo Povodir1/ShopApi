@@ -1,8 +1,10 @@
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
-from app.models import Item, Category, Image
+from app.models import Item, Category, Image, User, Attribute
+from app.services.preference_logic import update_user_preference
 from sqlalchemy.orm import joinedload
 from enum import Enum
+
 
 
 class SortType(Enum):
@@ -10,9 +12,11 @@ class SortType(Enum):
     to_increase = "price_desc"
     to_decrease = "price_asc"
     by_date = "date_desc"
+    by_preference = "by_preference"
 
 
-def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema):
+
+def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema,user_id:int|None = None ):
     with db_session() as session:
         items_query = session.query(Item).options(joinedload(Item.comments),
                                                   joinedload(Item.images),
@@ -66,6 +70,18 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
         # соотировка по расчетным полям
         if sort_type == SortType.by_rating:
             res_data.sort(key=lambda x: x.rating if x.rating else False,reverse=True)
+        elif sort_type == SortType.by_preference:
+            if not user_id:
+                raise ValueError("Нет пользователя")
+            user = session.query(User).filter(User.id == user_id).first()
+            user_tags_dict = {preference.tag_id: preference.score for preference in user.user_tag_preferences}
+            def get_item_score(item_id):
+                item_to_calculate = session.query(Item).filter(Item.is_active == True, Item.id == item_id).first()
+                applied_item_tags = [tag.tag_id for tag in item_to_calculate.item_tags if
+                                     tag.id in user_tags_dict.keys()]
+                item_score = sum([score for tag_id, score in user_tags_dict.items() if tag_id in applied_item_tags])
+                return item_score
+            res_data.sort(key = lambda x:get_item_score(x.id))
 
         res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
 
@@ -73,7 +89,8 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
 
 
 
-def serv_get_item(item_id:int):
+def serv_get_item(item_id:int,user_id:int|None = None):
+
     with db_session() as session:
         item = session.query(Item).options(joinedload(Item.comments),
                                            joinedload(Item.images)).filter(Item.id ==item_id,
@@ -87,7 +104,8 @@ def serv_get_item(item_id:int):
         else:
             rating = None
         attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' '+ attr.unit if attr.unit is not None else ''}"} for attr in item.attributes_value]
-
+        if user_id:
+            update_user_preference(user_id,item_id)
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
                               price = item.price,rating = rating,info= item.info,stock = item.stock)
 
@@ -95,6 +113,8 @@ def serv_get_item(item_id:int):
 def create_item(add_item:ItemCreateSchema):
     if len([el for el in add_item.images if el.is_main == True]) != 1:
         raise ValueError("Не выбрана/выбрано силшком много главных картинок")
+    if len(add_item.images)>5:
+        raise ValueError("допускается не больше 5 фото на товар")
     with db_session() as session:
         item = Item(name = add_item.name,info = add_item.info,price = add_item.price,stock = add_item.stock,category_id = add_item.category_id)
         session.add(item)
@@ -102,6 +122,10 @@ def create_item(add_item:ItemCreateSchema):
         session.flush(item)
         images = [Image(url = im.url, is_main = im.is_main,item_id = item.id) for im in add_item.images]
         session.add_all(images)
+        #продумать как заполнять поля атрибуты
+        attributes = session.query(Attribute).filter(Attribute.category_id == add_item.category_id).all()
+
+
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images,
                               price = item.price,rating = None,info= item.info,stock = item.stock)
 
