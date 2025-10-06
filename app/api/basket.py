@@ -1,23 +1,23 @@
 from fastapi import APIRouter
 from fastapi import HTTPException,status,Depends
 from app.services.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
-from app.services.user import user_by_token_optional
 from app.schemas.basket_item import BasketItemSchema
-from app.schemas.user import UserToken
+from app.schemas.user import UserSchema,UserTokenDataSchema
+from app.services.security import get_token
 router = APIRouter(prefix="/basket",tags=["Basket"])
 
 
 @router.get("",response_model=list[BasketItemSchema])
-def get_basket(user:UserToken|None = Depends(user_by_token_optional)):
+def get_basket(user:UserTokenDataSchema = Depends(get_token)):
     if not user:
         return []
     response = serv_get_basket_items(user.id)
     return response
 
 @router.post("/{item_id}",response_model=BasketItemSchema,status_code=status.HTTP_201_CREATED)
-def add_to_basket(item_id:int,user_id:int):
+def add_to_basket(item_id:int,user:UserTokenDataSchema = Depends(get_token)):
     try:
-        response = serv_add_to_basket(user_id,item_id)
+        response = serv_add_to_basket(user.id,item_id)
         return response
     except Exception as e:
         raise HTTPException(
@@ -26,9 +26,9 @@ def add_to_basket(item_id:int,user_id:int):
         )
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_from_basket(item_id,user_id:int):
+def delete_from_basket(item_id,user:UserTokenDataSchema = Depends(get_token)):
     try:
-        serv_delete_from_basket(item_id,user_id)
+        serv_delete_from_basket(item_id,user.id)
         return {"msg": "Item deleted"}
     except ValueError as e:
         raise HTTPException(

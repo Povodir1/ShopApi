@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status,Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
-from app.schemas.user import UserRegister, UserToken, UserLogin
+from app.schemas.user import UserRegister, UserSchema, UserLogin
 from app.services.user import create_user, is_unique_email, user_by_email_pass, reset_password
 from app.services.security import create_token,access_code
 from app.services.emai_sender import send_email
@@ -17,8 +17,9 @@ def token_json(tkn:str):
             "token_type": "bearer"}
 
 
-def code_ver(data,code):
+def code_ver(data:dict,code):
     try:
+        print(type(data))
         stored_code = data.get("code")
         if str(stored_code) != str(code):
             raise ValueError("неверный код подтверждения")
@@ -42,15 +43,10 @@ def create_code(email:EmailStr,redis_db,ttl,new_data:dict|None = None):
 
 @router.post("/token")
 def token(form_data: OAuth2PasswordRequestForm = Depends()):
-    try:
-        user_data = user_by_email_pass(form_data.username,form_data.password)
-        new_token = create_token(user_data.model_dump())
-        return token_json(new_token)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    user_data = user_by_email_pass(form_data.username,form_data.password)
+    new_token = create_token(user_data)
+    return token_json(new_token)
+
 
 @router.post("/register/request",status_code=status.HTTP_200_OK)
 def request_code(user:UserRegister):
@@ -88,7 +84,7 @@ def verify_code(email:EmailStr,code:str):
             detail=f"{e}"
         )
     new_user = create_user(UserRegister(**user_data))
-    user_data = UserToken(**new_user.model_dump())
+    user_data = UserSchema(**new_user.model_dump())
     new_token = create_token(user_data.model_dump())
     return token_json(new_token)
 
@@ -118,20 +114,17 @@ def verify_code_for_pass(email:EmailStr,code:str):
 @router.post("/reset_password/confirm")
 def confirm_pass(email:EmailStr,code:str,new_password:str):
     data_json = password_reset_client.get(email)
-    try:
-        code_ver(data_json,code)
-        reset_password(email, new_password)
-        password_reset_client.delete(email)
-        return {"Msg":"Пароль изменен"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"{e}"
-        )
+
+    data = json.loads(data_json)
+    code_ver(data,code)
+    reset_password(email, new_password)
+    password_reset_client.delete(email)
+    return {"Msg":"Пароль изменен"}
+
 
 
 @router.post("/login")
 def login(user:UserLogin):
     user_data = user_by_email_pass(user.email, user.password_hash)
-    new_token = create_token(user_data.model_dump())
+    new_token = create_token(user_data)
     return token_json(new_token)

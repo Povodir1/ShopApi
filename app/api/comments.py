@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException,status,Depends
 from app.services.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
-from app.services.user import user_by_token
+from app.services.security import get_token
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
-from app.schemas.user import UserToken
+from app.schemas.user import UserSchema, UserTokenDataSchema
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
 
@@ -12,7 +12,7 @@ def get_comments(item_id:int):
     return response
 
 @router.patch("/{item_id}",response_model=CommentSchema)
-def patch_comments(item_id:int,new_data:CommentUpdateSchema, user: UserToken = Depends(user_by_token)):
+def patch_comments(item_id:int,new_data:CommentUpdateSchema, user: UserTokenDataSchema = Depends(get_token)):
     try:
         response = serv_patch_comment(item_id,user.id,new_data)
         return response
@@ -26,7 +26,7 @@ def patch_comments(item_id:int,new_data:CommentUpdateSchema, user: UserToken = D
             detail=f"Internal server error: {str(e)}")
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_comments(item_id:int, user: UserToken = Depends(user_by_token)):
+def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token)):
     try:
         serv_delete_comment(item_id, user.id)
         return {"msg": "Comment deleted"}
@@ -40,7 +40,7 @@ def delete_comments(item_id:int, user: UserToken = Depends(user_by_token)):
             detail=f"Internal server error: {str(e)}")
 
 @router.post("/{item_id}",response_model=CommentSchema,status_code=status.HTTP_201_CREATED)
-def post_comments(new_com:CommentCreateSchema,user: UserToken = Depends(user_by_token)):
+def post_comments(new_com:CommentCreateSchema,user: UserTokenDataSchema = Depends(get_token)):
     try:
         response = serv_create_comment(new_com,user.id)
         return response

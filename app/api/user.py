@@ -1,13 +1,13 @@
 from fastapi import APIRouter, HTTPException,status, Depends
-from app.services.user import get_user,patch_user, user_by_token
-from app.schemas.user import UserPatch, UserToken,UserSchema
-
+from app.services.user import get_user,patch_user
+from app.schemas.user import UserPatch,UserSchema,UserTokenDataSchema
+from app.services.security import user_auth, get_token
 
 router = APIRouter(prefix="/users",tags=["Users"])
 
 
 @router.get("/me",response_model=UserSchema)
-def get_user_me(user: UserToken = Depends(user_by_token)):
+def get_user_me(user:UserTokenDataSchema = Depends(get_token)):
     try:
         response = get_user(user.id)
         return response
@@ -24,7 +24,7 @@ def get_user_me(user: UserToken = Depends(user_by_token)):
 
 
 @router.patch("/me",response_model=UserSchema)
-def patch_user_me(user_data:UserPatch,user: UserToken = Depends(user_by_token)):
+def patch_user_me(user_data:UserPatch,user: UserTokenDataSchema = Depends(get_token)):
     try:
         response = patch_user(user.id,user_data)
         return response

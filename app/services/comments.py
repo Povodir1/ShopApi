@@ -4,8 +4,10 @@ from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreate
 from sqlalchemy.orm import joinedload
 
 def serv_get_comments(item_id:int):
+    print('q')
     with db_session() as session:
         comments = session.query(Comment).options(joinedload(Comment.users)).filter(Comment.item_id==item_id).all()
+        print('w')
         return [CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
                               rating = comment.rating,created_at=comment.created_at,
                               updated_at=comment.updated_at) for comment in comments]

@@ -1,6 +1,6 @@
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, Text, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, Text, Boolean, Enum
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 import enum
@@ -10,8 +10,9 @@ class LanguageList(enum.Enum):
     en = "english"
 
 class CurrencyType(enum.Enum):
-    byn = "BYN"
-    usd = "USD"
+    BYN = "BYN"
+    USD = "USD"
+    RUB = "RUB"
 
 class User(Base):
     __tablename__ = "users"
@@ -25,8 +26,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.now)
     last_login = Column(DateTime, default=datetime.now)
     is_banned = Column(Boolean,default=False)
-    language = Column(String,default="ru") #enum
-    currency = Column(String,default="usd") #enum
+    language = Column(Enum(LanguageList),default=LanguageList.ru)
+    currency = Column(Enum(CurrencyType),default=CurrencyType.USD)
 
     comments = relationship("Comment", back_populates="users")
     orders = relationship("Order", back_populates="users")
