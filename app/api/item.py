@@ -54,14 +54,10 @@ def get_item(item_id,user:UserTokenDataSchema = Depends(get_token)):
 
 @router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED)
 def post_item(new_item: ItemCreateSchema):
-    try:
+
         response = create_item(new_item)
         return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+
 
 
 @router.patch("/{item_id}",response_model=ItemSoloSchema)

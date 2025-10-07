@@ -26,8 +26,9 @@ class ItemCreateSchema(BaseModel):
     info: str|None = None
     images: list[ImageSchema] | None = None
     stock: int = Field(ge=0)
-    attributes: dict[str, str] | None= None
-    category_id:int|None = None
+    attributes: dict[int,tuple[str,str|None]]
+    tags: list[int]
+    category_id:int
 
     class Config:
         from_attributes = True
@@ -38,7 +39,7 @@ class ItemPatchSchema(BaseModel):
     info: Optional[str] = None
     stock: Optional[int] = None
     is_active: Optional[bool] = None
-    attributes: Optional[list[dict[str, str]]] = None
+    attributes: Optional[dict[str, str]] = None
     category_id: Optional[int] = None
 
     class Config:
