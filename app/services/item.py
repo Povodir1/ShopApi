@@ -1,5 +1,3 @@
-from email.charset import add_alias
-
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
@@ -113,7 +111,7 @@ def serv_get_item(item_id:int,user_id:int):
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
                               price = item.price,rating = rating,info= item.info,stock = item.stock)
 
-#старое
+
 def create_item(add_item:ItemCreateSchema):
     if len([el for el in add_item.images if el.is_main == True]) != 1:
         raise ValueError("Не выбрана/выбрано силшком много главных картинок")
@@ -123,9 +121,10 @@ def create_item(add_item:ItemCreateSchema):
         item = Item(name = add_item.name,info = add_item.info,price = add_item.price,stock = add_item.stock,category_id = add_item.category_id)
         session.add(item)
         session.flush()
+
         images = [Image(url = im.url, is_main = im.is_main,item_id = item.id) for im in add_item.images]
         session.add_all(images)
-        #продумать как заполнять поля атрибуты
+
         attributes = session.query(Attribute).filter(Attribute.category_id == add_item.category_id).all()
         if not all([attribute.id in add_item.attributes.keys() for attribute in attributes]) or len(attributes) != len(add_item.attributes):
             raise ValueError("Недопустимые атрибуты")
@@ -135,11 +134,12 @@ def create_item(add_item:ItemCreateSchema):
 
         all_tags = session.query(Tag).all()
         if not all([tag in [i.id for i in all_tags] for tag in add_item.tags]):
-            raise ValueError("Недопустимые атрибуты")
+            raise ValueError("Недопустимые тэги")
 
         tags_to_add = [ItemTag(tag_id = tag,item_id = item.id) for tag in add_item.tags]
         session.add_all(tags_to_add)
         session.flush()
+
         attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' ' + attr.unit if attr.unit is not None else ''}"} for
                     attr in item.attributes_value]
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images,attributes=attr_arr,
@@ -158,17 +158,61 @@ def serv_delete_item(item_id):
             for i in items_in_basket:
                 session.delete(i)
 
-#старое
+
 def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
     with db_session() as session:
         item = session.query(Item).filter(Item.id == item_id,
                                           Item.is_active == True).first()
         if not item:
             raise ValueError("Item not found")
+
+        if new_data.category_id is not None and new_data.category_id != item.category_id:
+            session.query(AttributeValue).filter_by(item_id=item.id).delete()
+            item.category_id = new_data.category_id
+        if new_data.images:
+            if len([el for el in new_data.images if el.is_main == True]) != 1:
+                raise ValueError("Не выбрана/выбрано силшком много главных картинок")
+            if len(new_data.images) > 5:
+                raise ValueError("допускается не больше 5 фото на товар")
+            images = [Image(url=im.url, is_main=im.is_main, item_id=item.id) for im in new_data.images]
+            session.query(Image).filter_by(item_id = item.id).delete()
+            session.add_all(images)
+
+        attributes = session.query(Attribute).filter(Attribute.category_id == item.category_id).all()
+        if new_data.attributes:
+            if not all([attribute.id in new_data.attributes.keys() for attribute in attributes]) or len(attributes) != len(new_data.attributes):
+                raise ValueError("Недопустимые атрибуты")
+            attr_to_add = [AttributeValue(attribute_id=attr_id, value=attr_value,
+                                          unit=attr_unit, item_id=item.id) for attr_id, (attr_value, attr_unit) in new_data.attributes.items()]
+            session.query(AttributeValue).filter_by(item_id=item.id).delete()
+            session.add_all(attr_to_add)
+            new_data.attributes = None
+        if new_data.tags:
+            all_tags = session.query(Tag).all()
+            if not all([tag in [i.id for i in all_tags] for tag in new_data.tags]):
+                raise ValueError("Недопустимые тэги")
+
+            tags_to_add = [ItemTag(tag_id=tag, item_id=item.id) for tag in new_data.tags]
+            session.query(ItemTag).filter_by(item_id=item.id).delete()
+            session.add_all(tags_to_add)
+            new_data.tags = None
+
         for key,value in new_data.model_dump(exclude_none=True).items():
             setattr(item,key,value)
         session.flush()
-        return ItemSoloSchema.model_validate(item)
+
+        if item.comments:
+            ratings = [com.rating for com in item.comments if com.rating is not None]
+            if ratings:
+                rating = round(sum(ratings) / len(ratings), 1)
+        else:
+            rating = None
+
+        attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' ' + attr.unit if attr.unit is not None else ''}"} for
+                    attr in item.attributes_value]
+
+        return ItemSoloSchema(id=item.id, name=item.name, images=item.images, attributes=attr_arr,
+                              price=item.price, rating=rating, info=item.info, stock=item.stock)
 
 
 def serv_get_categories():

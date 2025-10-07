@@ -8,7 +8,7 @@ class ItemCatalogSchema(BaseModel):
     id: int
     name: str
     images: str | None = None
-    price: float = 0
+    price: float
     rating: float | None = None
 
     class Config:
@@ -17,7 +17,7 @@ class ItemCatalogSchema(BaseModel):
 class ItemSoloSchema(ItemCatalogSchema):
     info: Optional[str] = None
     images: list[ImageSchema] = None
-    attributes: list[dict[str,str]] | None= None
+    attributes: list[dict[str,str| None]]| None
     stock: int = Field(ge=0)
 
 class ItemCreateSchema(BaseModel):
@@ -36,10 +36,12 @@ class ItemCreateSchema(BaseModel):
 class ItemPatchSchema(BaseModel):
     name: Optional[str] = None
     price: Optional[float] = None
+    images: Optional[list[ImageSchema]] = None
     info: Optional[str] = None
     stock: Optional[int] = None
     is_active: Optional[bool] = None
-    attributes: Optional[dict[str, str]] = None
+    attributes: Optional[dict[int,tuple[str,str|None]]] = None
+    tags: Optional[list[int]] = None
     category_id: Optional[int] = None
 
     class Config:
