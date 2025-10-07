@@ -20,7 +20,7 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
                  sort_type:SortType = SortType.by_rating,
                  user:UserTokenDataSchema = Depends(get_token)):
     try:
-        response = get_all_items(limit,page,sort_type,filters,user.id,user.currency)
+        response = get_all_items(limit,page,sort_type,filters,user.id,CurrencyType[user.currency])
         return response
     except ValueError as e:
         raise HTTPException(

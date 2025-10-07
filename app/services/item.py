@@ -19,6 +19,7 @@ class SortType(Enum):
 
 
 def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema,user_id:int,currency_type:CurrencyType):
+    print(currency_type)
     with db_session() as session:
         items_query = session.query(Item).options(joinedload(Item.comments),
                                                   joinedload(Item.images),

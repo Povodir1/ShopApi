@@ -2,10 +2,10 @@ from pydantic import BaseModel, EmailStr, condecimal
 from datetime import datetime
 from typing import Optional
 from app.models.user import CurrencyType
-#old
+
 class UserPatch(BaseModel):
-    name: Optional[str] = None
-    password_hash: Optional[str] = None
+    currency:str|None = None
+    language:str|None = None
 
 
 class UserLogin(BaseModel):
@@ -33,7 +33,8 @@ class UserSchema(BaseModel):
     email: EmailStr
     money: condecimal(max_digits=10, decimal_places=2)
     created_at: datetime
-
+    currency:str
+    language:str
 
 
 
