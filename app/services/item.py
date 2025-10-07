@@ -2,6 +2,8 @@ from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
 from app.models import Item, Category, Image, User, Attribute
 from app.services.preference_logic import update_user_preference
+from app.services.currency_tools import convert_currency
+from app.models.user import CurrencyType
 from sqlalchemy.orm import joinedload
 from enum import Enum
 
@@ -16,7 +18,7 @@ class SortType(Enum):
 
 
 
-def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema,user_id:int|None = None ):
+def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterSchema,user_id:int,currency_type:CurrencyType):
     with db_session() as session:
         items_query = session.query(Item).options(joinedload(Item.comments),
                                                   joinedload(Item.images),
@@ -65,7 +67,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
             else:
                 res_images = None
             res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
-                                 price=item.price, rating=rating))
+                                 price=convert_currency(currency_type,item.price), rating=rating))
 
         # соотировка по расчетным полям
         if sort_type == SortType.by_rating:
@@ -89,7 +91,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
 
 
 
-def serv_get_item(item_id:int,user_id:int|None = None):
+def serv_get_item(item_id:int,user_id:int):
 
     with db_session() as session:
         item = session.query(Item).options(joinedload(Item.comments),

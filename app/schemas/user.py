@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, condecimal
 from datetime import datetime
 from typing import Optional
+from app.models.user import CurrencyType
 #old
 class UserPatch(BaseModel):
     name: Optional[str] = None

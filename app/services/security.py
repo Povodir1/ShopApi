@@ -24,6 +24,7 @@ def verify_pass(password:str,hash_password:str):
 
 def create_token(data:UserTokenDataSchema):
     to_encode = data.model_copy()
+    print(to_encode)
     return jwt.encode(to_encode.model_dump(),settings.JWT_SECRET_KEY,algorithm=ALGORITHM)
 
 def decode_token(token:str):

@@ -8,6 +8,8 @@ from app.services.item import serv_get_item, get_all_items, create_item,serv_del
 from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemFilterSchema,get_filters,ItemCatalogSchema,ItemSoloSchema
 from app.schemas.user import UserTokenDataSchema
 from app.services.security import get_token
+
+from app.models.user import CurrencyType
 router = APIRouter(prefix="/items",tags=["Items"])
 
 
@@ -18,7 +20,7 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
                  sort_type:SortType = SortType.by_rating,
                  user:UserTokenDataSchema = Depends(get_token)):
     try:
-        response = get_all_items(limit,page,sort_type,filters,user.id if user else None)
+        response = get_all_items(limit,page,sort_type,filters,user.id,user.currency)
         return response
     except ValueError as e:
         raise HTTPException(

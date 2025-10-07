@@ -20,7 +20,7 @@ def user_by_email_pass(email:str|EmailStr,password:str):
             raise ValueError("Нет пользователя с таким email")
         if not verify_pass(password,user.password_hash):
             raise ValueError("Неверный пароль")
-        return UserTokenDataSchema.model_validate(user,from_attributes=True)
+        return UserTokenDataSchema(id = user.id,name = user.name,role = user.role,currency=user.currency.name,language=user.language.name)
 
 def get_user(user_id):
     with db_session() as session:
