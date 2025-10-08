@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException,status,Depends
-from app.services.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
+from app.services.api_crud.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
 from app.services.security import get_token
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
-from app.schemas.user import UserSchema, UserTokenDataSchema
+from app.schemas.user import UserTokenDataSchema
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
 

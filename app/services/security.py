@@ -1,11 +1,14 @@
+import datetime
 import random
-
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
 from app.schemas.user import UserTokenDataSchema
 from passlib.context import CryptContext
 from app.config import settings
+from pydantic import EmailStr
+from app.database import db_session
+from app.models.user import User
 
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -33,3 +36,21 @@ def decode_token(token:str):
 
 def access_code():
     return str(random.randint(100000,999999))
+
+
+
+def is_unique_email(email:EmailStr):
+    with db_session() as session:
+        user = session.query(User).filter(User.email == email).first()
+        return False if user else True
+
+
+def user_by_email_pass(email:str|EmailStr,password:str):
+    with db_session() as session:
+        user = session.query(User).filter(User.email == email).first()
+        if not user:
+            raise ValueError("Нет пользователя с таким email")
+        if not verify_pass(password,user.password_hash):
+            raise ValueError("Неверный пароль")
+        user.last_login = datetime.datetime.now()
+        return UserTokenDataSchema(id = user.id,name = user.name,role = user.role,currency=user.currency.name,language=user.language.name)

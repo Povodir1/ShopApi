@@ -1,5 +1,5 @@
 from fastapi import APIRouter,HTTPException,status, Depends
-from app.services.favorite import serv_get_favorite_items,serv_add_to_favorite,serv_delete_from_favorite
+from app.services.api_crud.favorite import serv_get_favorite_items,serv_add_to_favorite,serv_delete_from_favorite
 from app.schemas.favorite import FavouriteItemSchema
 from app.schemas.user import UserTokenDataSchema
 from app.services.security import get_token

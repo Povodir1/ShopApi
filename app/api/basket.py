@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi import HTTPException,status,Depends
-from app.services.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
+from app.services.api_crud.basket import serv_add_to_basket, serv_get_basket_items,serv_delete_from_basket
 from app.schemas.basket_item import BasketItemSchema
-from app.schemas.user import UserSchema,UserTokenDataSchema
+from app.schemas.user import UserTokenDataSchema
 from app.services.security import get_token
 router = APIRouter(prefix="/basket",tags=["Basket"])
 

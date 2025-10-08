@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
 from app.schemas.user import UserRegister, UserSchema, UserLogin
-from app.services.user import create_user, is_unique_email, user_by_email_pass, reset_password
-from app.services.security import create_token,access_code
+from app.services.api_crud.user import create_user ,reset_password
+from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass
 from app.services.emai_sender import send_email
 
 from app.database import auth_clients,password_reset_client

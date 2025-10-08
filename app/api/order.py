@@ -1,9 +1,10 @@
 
 from fastapi import APIRouter,HTTPException,status,Depends
-from app.services.order import serv_create_order,serv_get_all_orders
+from app.services.api_crud.order import serv_create_order,serv_get_all_orders
 from app.services.security import get_token
 from app.schemas.order import OrderSchema
-from app.services.user import UserTokenDataSchema
+from app.schemas.user import UserTokenDataSchema
+
 router = APIRouter(prefix="/order",tags=["Order"])
 
 

@@ -24,4 +24,3 @@ def update_user_preference(user_id,item_id,action = 0):
         for tag in new_tags:
             session.add(UserTagPreference(user_id = user_id,tag_id = tag,score = 1))
 
-

@@ -4,7 +4,7 @@ from fastapi import APIRouter,HTTPException,status
 
 from fastapi.params import Depends
 
-from app.services.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories,SortType
+from app.services.api_crud.item import serv_get_item, get_all_items, create_item,serv_delete_item, serv_patch_item,serv_get_categories,SortType
 from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemFilterSchema,get_filters,ItemCatalogSchema,ItemSoloSchema
 from app.schemas.user import UserTokenDataSchema
 from app.services.security import get_token

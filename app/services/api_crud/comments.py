@@ -1,8 +1,6 @@
 from app.database import db_session
-from app.models.comment import Comment
-from app.models.comment_media import CommentMedia
-from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema
-from app.schemas.comment import CommentMediaSchema
+from app.models import Comment, CommentMedia
+from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema
 from sqlalchemy.orm import joinedload
 
 def serv_get_comments(item_id:int):
