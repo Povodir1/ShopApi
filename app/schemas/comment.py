@@ -2,11 +2,16 @@ from pydantic import BaseModel,Field
 from typing import Optional
 from datetime import datetime
 
+class CommentMediaSchema(BaseModel):
+    url:str
+    type:str
+
 class CommentSchema(BaseModel):
     id:int
     username: str
+    media: Optional[list[CommentMediaSchema]]
     message: Optional[str]
-    rating: Optional[int] = Field(ge=1,le=5)
+    rating: float = Field(ge=1,le=5)
     created_at: datetime
     updated_at: datetime
 
@@ -14,9 +19,11 @@ class CommentSchema(BaseModel):
         from_attributes = True
 
 class CommentUpdateSchema(BaseModel):
+    media: Optional[list[CommentMediaSchema]] = None
     message: Optional[str] = None
 
 class CommentCreateSchema(BaseModel):
     item_id:int
+    media: Optional[list[CommentMediaSchema]]
     message: Optional[str] = None
-    rating:Optional[float] = None
+    rating: float = Field(ge=1,le=5)

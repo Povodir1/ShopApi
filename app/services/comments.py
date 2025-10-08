@@ -1,16 +1,22 @@
 from app.database import db_session
 from app.models.comment import Comment
+from app.models.comment_media import CommentMedia
 from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema
+from app.schemas.comment import CommentMediaSchema
 from sqlalchemy.orm import joinedload
 
 def serv_get_comments(item_id:int):
-    print('q')
     with db_session() as session:
         comments = session.query(Comment).options(joinedload(Comment.users)).filter(Comment.item_id==item_id).all()
-        print('w')
-        return [CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
-                              rating = comment.rating,created_at=comment.created_at,
-                              updated_at=comment.updated_at) for comment in comments]
+        comment_list = []
+        for comment in comments:
+            com_media = [CommentMediaSchema(url = med.url,type = med.type) for med in comment.comment_medias]
+
+            com  = CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
+                                  rating = comment.rating,media=com_media,created_at=comment.created_at,
+                                  updated_at=comment.updated_at)
+            comment_list.append(com)
+        return comment_list
 
 def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema):
     with db_session() as session:
@@ -31,13 +37,15 @@ def serv_create_comment(data:CommentCreateSchema,user_id:int):
             if is_available:
                 raise ValueError("Ты уже написал комментарий")
 
-            comment = Comment(**data.model_dump(),user_id = user_id)
+            comment = Comment(item_id = data.item_id,rating = data.rating,
+                              message = data.message,user_id = user_id)
             session.add(comment)
             session.flush()
-
+            com_medias = [CommentMedia(url = med.url,type = med.type,comment_id = comment.id) for med in data.media]
+            session.add_all(com_medias)
             return CommentSchema(id=comment.id, username=comment.users.name, message=comment.message,
                                  rating=comment.rating,created_at=comment.created_at,
-                                 updated_at=comment.updated_at)
+                                 updated_at=comment.updated_at,media= data.media)
 
 def serv_delete_comment(item_id:int,user_id:int):
     with db_session() as session:
