@@ -13,17 +13,10 @@ def get_comments(item_id:int):
 
 @router.patch("/{item_id}",response_model=CommentSchema)
 def patch_comments(item_id:int,new_data:CommentUpdateSchema, user: UserTokenDataSchema = Depends(get_token)):
-    try:
+
         response = serv_patch_comment(item_id,user.id,new_data)
         return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}")
+
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token)):

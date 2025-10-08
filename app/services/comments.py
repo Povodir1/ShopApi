@@ -23,12 +23,22 @@ def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema):
         comment = session.query(Comment).filter(Comment.user_id ==user_id,Comment.item_id == item_id).first()
         if not comment:
             raise ValueError("Комментарий не найден")
-        for key,val in new_data.model_dump(exclude_unset=True).items():
+        print(new_data.media)
+        if new_data.media:
+            com_medias = [CommentMedia(url=med.url, type=med.type,comment_id = comment.id) for med in new_data.media]
+            session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
+            session.add_all(com_medias)
+            new_data.media = None
+
+
+        for key,val in new_data.model_dump(exclude_none=True).items():
             setattr(comment,key,val)
         session.flush()
+        medias = [CommentMediaSchema(url=med.url, type=med.type) for med in comment.comment_medias]
         return CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
                              rating = comment.rating,created_at=comment.created_at,
-                             updated_at=comment.updated_at)
+                             updated_at=comment.updated_at,media=medias)
+
 
 def serv_create_comment(data:CommentCreateSchema,user_id:int):
         with db_session() as session:
@@ -52,6 +62,7 @@ def serv_delete_comment(item_id:int,user_id:int):
         comment = session.query(Comment).filter(Comment.user_id == user_id,Comment.item_id == item_id).first()
         if not comment:
             raise ValueError("Комментарий не найден")
+        session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
         session.delete(comment)
         return True
 

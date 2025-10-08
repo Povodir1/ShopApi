@@ -21,6 +21,7 @@ class CommentSchema(BaseModel):
 class CommentUpdateSchema(BaseModel):
     media: Optional[list[CommentMediaSchema]] = None
     message: Optional[str] = None
+    rating:Optional[float] = Field(default=None,ge=1,le=5)
 
 class CommentCreateSchema(BaseModel):
     item_id:int
