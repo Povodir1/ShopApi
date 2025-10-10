@@ -8,7 +8,7 @@ class Tag(Base):
     __tablename__ = "tags"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False,unique=True)
 
-    item_tags = relationship("ItemTag", back_populates="tags")
-    user_tag_preferences = relationship("UserTagPreference", back_populates="tags")
+    item_tags = relationship("ItemTag", back_populates="tags",cascade='delete')
+    user_tag_preferences = relationship("UserTagPreference", back_populates="tags",cascade='delete')

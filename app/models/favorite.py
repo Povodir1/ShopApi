@@ -9,9 +9,9 @@ class FavoriteItem(Base):
     __tablename__ = "favorite_items"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    item_id = Column(Integer, ForeignKey("items.id"))
-    added_at =  Column(DateTime, default=datetime.now)
+    user_id = Column(Integer, ForeignKey("users.id"),nullable=False)
+    item_id = Column(Integer, ForeignKey("items.id"),nullable=False)
+    added_at =  Column(DateTime,nullable=False, default=datetime.now)
 
     users = relationship("User", back_populates="favorites")
     items = relationship("Item", back_populates="favorites")

@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,text
 from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from app.models.base import Base
@@ -38,4 +38,5 @@ password_reset_client = redis.Redis(host=settings.REDIS_HOST,
                      port = settings.REDIS_PORT,
                      db = 1,
                      decode_responses=settings.REDIS_IS_DECODE)
+
 

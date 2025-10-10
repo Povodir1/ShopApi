@@ -7,8 +7,8 @@ class ItemTag(Base):
     __tablename__ = "item_tags"
 
     id = Column(Integer, primary_key=True)
-    tag_id = Column(Integer,ForeignKey("tags.id"))
-    item_id = Column(Integer,ForeignKey("items.id"))
+    tag_id = Column(Integer,ForeignKey("tags.id"),nullable=False)
+    item_id = Column(Integer,ForeignKey("items.id"),nullable=False)
 
     items = relationship("Item", back_populates="item_tags")
     tags = relationship("Tag", back_populates="item_tags")

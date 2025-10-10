@@ -2,8 +2,8 @@ import datetime
 import random
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends
-from app.schemas.user import UserTokenDataSchema
+from fastapi import Depends,HTTPException
+from app.schemas.user import UserTokenDataSchema, UserSchema
 from passlib.context import CryptContext
 from app.config import settings
 from pydantic import EmailStr
@@ -54,3 +54,16 @@ def user_by_email_pass(email:str|EmailStr,password:str):
             raise ValueError("Неверный пароль")
         user.last_login = datetime.datetime.now()
         return UserTokenDataSchema(id = user.id,name = user.name,role = user.role,currency=user.currency.name,language=user.language.name)
+
+
+def reset_password(email:EmailStr|str,new_password):
+    with db_session() as session:
+        user = session.query(User).filter(User.email == email).first()
+        user.password_hash = hash_pass(new_password)
+        session.flush()
+        return UserSchema.model_validate(user,from_attributes=True)
+
+def is_admin(user:UserTokenDataSchema = Depends(get_token)):
+    if user.role != 'admin':
+        raise HTTPException(status_code=403, detail="Вы не админ")
+    return user

@@ -12,8 +12,8 @@ class CommentMedia(Base):
     __tablename__ = "comment_medias"
 
     id = Column(Integer, primary_key=True)
-    comment_id = Column(Integer,ForeignKey("comments.id"))
+    comment_id = Column(Integer,ForeignKey("comments.id"),nullable=False)
     url = Column(Text, nullable=False)
-    type = Column(Enum(MediaType),nullable=False)#enum
+    media_type = Column(Enum(MediaType),nullable=False,default=MediaType.image)
 
     comments = relationship("Comment", back_populates="comment_medias")

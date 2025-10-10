@@ -8,10 +8,14 @@ router = APIRouter(prefix="/users",tags=["Users"])
 
 @router.get("/me",response_model=UserSchema)
 def get_user_me(user:UserTokenDataSchema = Depends(get_token)):
-
+    try:
         response = get_user(user.id)
         return response
-
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.patch("/me",response_model=UserSchema)

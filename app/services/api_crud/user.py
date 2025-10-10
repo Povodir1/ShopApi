@@ -37,10 +37,4 @@ def patch_user(user_id:int, new_data:UserPatch):
         session.flush()
         return UserSchema.model_validate(user,from_attributes=True)
 
-def reset_password(email:EmailStr|str,new_password):
-    with db_session() as session:
-        user = session.query(User).filter(User.email == email).first()
-        user.password_hash = hash_pass(new_password)
-        session.flush()
-        return UserSchema.model_validate(user,from_attributes=True)
 
