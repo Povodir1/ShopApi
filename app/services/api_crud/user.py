@@ -1,11 +1,7 @@
-
 from app.database import db_session
 from app.schemas.user import UserSchema, UserRegister, UserPatch
-from pydantic import EmailStr
 from app.services.security import  hash_pass
-from app.models.user import User,CurrencyType,LanguageList
-
-
+from app.models.user import User,CurrencyType,LanguageList,Role
 
 
 def get_user(user_id):
@@ -36,5 +32,14 @@ def patch_user(user_id:int, new_data:UserPatch):
             setattr(user,key,value)
         session.flush()
         return UserSchema.model_validate(user,from_attributes=True)
+
+def change_role(user_id:int,role: Role):
+    with db_session() as session:
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("User не найден")
+        user.role = role
+        return UserSchema.model_validate(user,from_attributes=True)
+
 
 

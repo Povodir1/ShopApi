@@ -10,7 +10,7 @@ from app.services.emai_sender import send_email
 from app.database import auth_clients,password_reset_client
 import json
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(tags=["Auth"])
 
 def token_json(tkn:str):
     return {"access_token": tkn,

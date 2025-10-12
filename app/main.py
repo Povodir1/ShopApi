@@ -8,6 +8,8 @@ from app.api.user.basket import router as basket_router
 from app.api.user.order import router as order_router
 from app.api.user.favorite import router as favorite_router
 from app.api.admin.items import router as admin_item_router
+from app.api.admin.users import router as admin_user_router
+from app.api.other.image import router as image_file_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="E-Shop API", version="1.0.0")
@@ -29,4 +31,5 @@ app.include_router(basket_router)
 app.include_router(order_router)
 app.include_router(favorite_router)
 app.include_router(admin_item_router)
-
+app.include_router(admin_user_router)
+app.include_router(image_file_router)

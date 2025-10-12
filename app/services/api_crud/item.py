@@ -109,7 +109,7 @@ def serv_get_item(item_id:int,user_id:int):
         if user_id:
             update_user_preference(user_id,item_id)
 
-        item.view_count +=1
+        item.views_count +=1
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
                               price = item.price,rating = rating,info= item.info,stock = item.stock)
 

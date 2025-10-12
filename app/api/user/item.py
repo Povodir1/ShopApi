@@ -4,7 +4,7 @@ from fastapi import APIRouter,HTTPException,status
 
 from fastapi.params import Depends
 
-from app.services.api_crud.item import serv_get_item, get_all_items, serv_get_categories,SortType
+from app.services.api_crud.item import serv_get_item, get_all_items,SortType
 from app.schemas.item import ItemFilterSchema,get_filters,ItemCatalogSchema,ItemSoloSchema
 from app.schemas.user import UserTokenDataSchema
 from app.services.security import get_token
@@ -28,13 +28,6 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
-
-
-
-@router.get("/category")
-def get_categories():
-    response = serv_get_categories()
-    return response
 
 
 @router.get("/{item_id}",response_model=ItemSoloSchema)

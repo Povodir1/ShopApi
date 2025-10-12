@@ -23,20 +23,15 @@ def serv_create_order(user_id:int):
             session.add(order_item)
             res_price += item.items.price*item.count
 
-
-        #обновить цену товара
-        order.price = res_price
-        session.flush()
-
         #оплата заказа юзером
         user = session.query(User).filter(User.id ==user_id).first()
         if not user:
             raise ValueError("Пользователь не найден")
 
-        if user.money < order.price:
+        if user.money < res_price:
             raise ValueError("Недостаточно средств")
 
-        user.money -= order.price
+        user.money -= res_price
 
         #убрать товары из корзины
         for item in basket_items:
@@ -44,7 +39,6 @@ def serv_create_order(user_id:int):
 
 
         res_item_arr = []
-        res_price = 0
         order_items = session.query(OrderItem).filter(OrderItem.order_id == order.id).all()
 
         for item in order_items:
@@ -55,7 +49,6 @@ def serv_create_order(user_id:int):
             res_item_arr.append(OrderItemSchema(item_id = item.item_id,item_name=item.items.name,
                                                 item_image=res_images,count = item.count,
                                                 item_price = item.items.price))
-            res_price += item.items.price*item.count
 
         #отправить сообщение
         send_email(user.email,"вы сделали такой-то такой-то заказ","New Order")

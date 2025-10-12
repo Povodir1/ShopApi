@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException,status,Depends
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form, Path
 from app.services.api_crud.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
 from app.services.security import get_token
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
@@ -12,9 +14,13 @@ def get_comments(item_id:int):
     return response
 
 @router.patch("/{item_id}",response_model=CommentSchema)
-def patch_comments(item_id:int,new_data:CommentUpdateSchema, user: UserTokenDataSchema = Depends(get_token)):
-
-        response = serv_patch_comment(item_id,user.id,new_data)
+async def patch_comments(item_id:int,
+                   message: Optional[str] = Form(None),
+                   rating: float = Form(...),
+                   media: Optional[list[UploadFile]] = File(None),
+                   user: UserTokenDataSchema = Depends(get_token)):
+        new_data = CommentUpdateSchema(message=message, rating=rating)
+        response = await serv_patch_comment(item_id,user.id,new_data,media)
         return response
 
 
@@ -33,9 +39,16 @@ def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token))
             detail=f"Internal server error: {str(e)}")
 
 @router.post("/{item_id}",response_model=CommentSchema,status_code=status.HTTP_201_CREATED)
-def post_comments(new_com:CommentCreateSchema,user: UserTokenDataSchema = Depends(get_token)):
+async def post_comments(
+        item_id: int = Path(),
+        message: Optional[str] = Form(None),
+        rating: float = Form(...),
+        media: Optional[list[UploadFile]] = File(None),
+        user: UserTokenDataSchema = Depends(get_token)
+):
     try:
-        response = serv_create_comment(new_com,user.id)
+        new_com = CommentCreateSchema(item_id = item_id, message= message,rating=rating)
+        response = await serv_create_comment(new_com,user.id,media)
         return response
     except ValueError as e:
         raise HTTPException(

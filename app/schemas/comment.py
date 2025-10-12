@@ -1,5 +1,6 @@
 from pydantic import BaseModel,Field
-from typing import Optional
+from fastapi import Form
+from typing import Optional, Annotated
 from datetime import datetime
 
 class CommentMediaSchema(BaseModel):
@@ -19,12 +20,11 @@ class CommentSchema(BaseModel):
         from_attributes = True
 
 class CommentUpdateSchema(BaseModel):
-    media: Optional[list[CommentMediaSchema]] = None
     message: Optional[str] = None
     rating:Optional[float] = Field(default=None,ge=1,le=5)
 
+
 class CommentCreateSchema(BaseModel):
-    item_id:int
-    media: Optional[list[CommentMediaSchema]]
+    item_id: int
     message: Optional[str] = None
-    rating: float = Field(ge=1,le=5)
+    rating: float = Field(ge=1, le=5)
