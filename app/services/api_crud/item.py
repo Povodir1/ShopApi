@@ -1,3 +1,5 @@
+import datetime
+
 from app.database import db_session
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
@@ -107,7 +109,8 @@ def serv_get_item(item_id:int,user_id:int):
                 rating = round(sum(ratings) / len(ratings),1)
         else:
             rating = None
-        attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' '+ attr.unit if attr.unit is not None else ''}"} for attr in item.attributes_value]
+        attr_arr = [{f"{attr.attributes.name}": AttributeData(value=attr.value, unit=attr.unit)} for
+                    attr in item.attributes_value]
         if user_id:
             update_user_preference(user_id,item_id)
 
@@ -178,6 +181,8 @@ async def serv_patch_item(item_id:int, new_data:ItemPatchSchema,media:list[Uploa
                                           Item.is_active == True).first()
         if not item:
             raise ValueError("Item not found")
+        if new_data or media:
+            item.updated_at = datetime.datetime.now()
 
         if new_data.category_id is not None and new_data.category_id != item.category_id:
             session.query(AttributeValue).filter_by(item_id=item.id).delete()

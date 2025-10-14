@@ -1,3 +1,4 @@
+import datetime
 import os.path
 
 from fastapi import UploadFile
@@ -47,6 +48,7 @@ async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchem
         for key,val in new_data.model_dump(exclude_none=True).items():
             setattr(comment,key,val)
         session.flush()
+        comment.updated_at = datetime.datetime.now()
         return CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
                              rating = comment.rating,created_at=comment.created_at,
                              updated_at=comment.updated_at,media=com_medias)
