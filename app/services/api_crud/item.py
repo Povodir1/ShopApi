@@ -1,13 +1,15 @@
 from app.database import db_session
-from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema
+from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
 from app.services.preference_logic import update_user_preference
 from app.services.currency_tools import convert_currency
 from app.models.user import CurrencyType
 from sqlalchemy.orm import joinedload
+from fastapi import UploadFile
 from enum import Enum
+import os
 
-
+folder_path = os.path.join(os.path.abspath('.'), f"app/media/items")
 
 class SortType(Enum):
     by_rating = "rating_desc"
@@ -114,24 +116,34 @@ def serv_get_item(item_id:int,user_id:int):
                               price = item.price,rating = rating,info= item.info,stock = item.stock)
 
 
-def create_item(add_item:ItemCreateSchema):
-    if len([el for el in add_item.images if el.is_main == True]) != 1:
-        raise ValueError("Не выбрана/выбрано силшком много главных картинок")
-    if len(add_item.images)>5:
-        raise ValueError("допускается не больше 5 фото на товар")
+async def create_item(add_item:ItemCreateSchema, media: list[UploadFile] | None = None):
+    if media:
+        if len(media) != len(add_item.image_metadata):
+            raise ValueError("Кол-во metadata не совпадает с кол-вом image")
+        if len([el for el in add_item.image_metadata if el == True]) != 1:
+            raise ValueError("Не выбрана/выбрано силшком много главных картинок")
+        if len(media)>5:
+            raise ValueError("допускается не больше 5 фото на товар")
+
     with db_session() as session:
         item = Item(name = add_item.name,info = add_item.info,price = add_item.price,stock = add_item.stock,category_id = add_item.category_id)
         session.add(item)
         session.flush()
-
-        images = [Image(url = im.url, is_main = im.is_main,item_id = item.id) for im in add_item.images]
-        session.add_all(images)
+        db_images = []
+        if media:
+            for ind, file in enumerate(media):
+                path = os.path.join(folder_path, f"{item.id}.{ind}.{file.filename.split('.')[1]}")
+                with open(path, 'wb') as f:
+                    content = await file.read()
+                    f.write(content)
+                    db_images.append(Image(url = path, is_main = add_item.image_metadata[ind],item_id = item.id))
+        session.add_all(db_images)
 
         attributes = session.query(Attribute).filter(Attribute.category_id == add_item.category_id).all()
         if not all([attribute.id in add_item.attributes.keys() for attribute in attributes]) or len(attributes) != len(add_item.attributes):
             raise ValueError("Недопустимые атрибуты")
-        attr_to_add = [AttributeValue(attribute_id = attr_id,value = attr_value,
-                                      unit = attr_unit,item_id = item.id) for attr_id,(attr_value,attr_unit) in add_item.attributes.items()]
+        attr_to_add = [AttributeValue(attribute_id = attr_id,value = attr_data.value,
+                                      unit = attr_data.unit,item_id = item.id) for attr_id,attr_data in add_item.attributes.items()]
         session.add_all(attr_to_add)
 
         all_tags = session.query(Tag).all()
@@ -141,8 +153,7 @@ def create_item(add_item:ItemCreateSchema):
         tags_to_add = [ItemTag(tag_id = tag,item_id = item.id) for tag in add_item.tags]
         session.add_all(tags_to_add)
         session.flush()
-
-        attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' ' + attr.unit if attr.unit is not None else ''}"} for
+        attr_arr = [{f"{attr.attributes.name}": AttributeData(value=attr.value,unit=attr.unit) } for
                     attr in item.attributes_value]
         return ItemSoloSchema(id = item.id,name = item.name,images = item.images,attributes=attr_arr,
                               price = item.price,rating = None,info= item.info,stock = item.stock)
@@ -161,7 +172,7 @@ def serv_delete_item(item_id):
                 session.delete(i)
 
 
-def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
+async def serv_patch_item(item_id:int, new_data:ItemPatchSchema,media:list[UploadFile]|None = None):
     with db_session() as session:
         item = session.query(Item).filter(Item.id == item_id,
                                           Item.is_active == True).first()
@@ -171,21 +182,35 @@ def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
         if new_data.category_id is not None and new_data.category_id != item.category_id:
             session.query(AttributeValue).filter_by(item_id=item.id).delete()
             item.category_id = new_data.category_id
-        if new_data.images:
-            if len([el for el in new_data.images if el.is_main == True]) != 1:
+
+        if media:
+            if len(media) != len(new_data.image_metadata):
+                raise ValueError("Кол-во metadata не совпадает с кол-вом image")
+            if len([el for el in new_data.image_metadata if el == True]) != 1:
                 raise ValueError("Не выбрана/выбрано силшком много главных картинок")
-            if len(new_data.images) > 5:
+            if len(media) > 5:
                 raise ValueError("допускается не больше 5 фото на товар")
-            images = [Image(url=im.url, is_main=im.is_main, item_id=item.id) for im in new_data.images]
+
+            [os.remove(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if
+             os.path.isfile(os.path.join(folder_path, f)) and f"{item.id}." in f]
+
+            db_images = []
+            for ind, file in enumerate(media):
+                path = os.path.join(folder_path, f"{item.id}.{ind}.{file.filename.split('.')[1]}")
+                with open(path, 'wb') as f:
+                    content = await file.read()
+                    f.write(content)
+                    db_images.append(Image(url=path, is_main=new_data.image_metadata[ind], item_id=item.id))
+
             session.query(Image).filter_by(item_id = item.id).delete()
-            session.add_all(images)
+            session.add_all(db_images)
 
         attributes = session.query(Attribute).filter(Attribute.category_id == item.category_id).all()
         if new_data.attributes:
             if not all([attribute.id in new_data.attributes.keys() for attribute in attributes]) or len(attributes) != len(new_data.attributes):
                 raise ValueError("Недопустимые атрибуты")
-            attr_to_add = [AttributeValue(attribute_id=attr_id, value=attr_value,
-                                          unit=attr_unit, item_id=item.id) for attr_id, (attr_value, attr_unit) in new_data.attributes.items()]
+            attr_to_add = [AttributeValue(attribute_id=attr_id, value=attr_data.value,
+                                          unit= attr_data.unit, item_id=item.id) for attr_id, attr_data in new_data.attributes.items()]
             session.query(AttributeValue).filter_by(item_id=item.id).delete()
             session.add_all(attr_to_add)
             new_data.attributes = None
@@ -210,7 +235,7 @@ def serv_patch_item(item_id:int, new_data:ItemPatchSchema):
         else:
             rating = None
 
-        attr_arr = [{f"{attr.attributes.name}": f"{attr.value}{' ' + attr.unit if attr.unit is not None else ''}"} for
+        attr_arr = [{f"{attr.attributes.name}": AttributeData(value=attr.value, unit=attr.unit)} for
                     attr in item.attributes_value]
 
         return ItemSoloSchema(id=item.id, name=item.name, images=item.images, attributes=attr_arr,

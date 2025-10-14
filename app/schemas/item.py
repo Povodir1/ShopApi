@@ -13,34 +13,38 @@ class ItemCatalogSchema(BaseModel):
 
     class Config:
         from_attributes = True
+class AttributeData(BaseModel):
+    value:str
+    unit:str | None
 
 class ItemSoloSchema(ItemCatalogSchema):
     info: Optional[str] = None
     images: list[ImageSchema] = None
-    attributes: list[dict[str,str| None]]| None
+    attributes: list[dict[str,AttributeData]]| None
     stock: int = Field(ge=0)
 
 class ItemCreateSchema(BaseModel):
     name: str
     price: float = 0
     info: str|None = None
-    images: list[ImageSchema] | None = None
+    image_metadata: list[bool] | None = None
     stock: int = Field(ge=0)
-    attributes: dict[int,tuple[str,str|None]]
+    attributes: dict[int,AttributeData]
     tags: list[int]
     category_id:int
 
     class Config:
         from_attributes = True
 
+
 class ItemPatchSchema(BaseModel):
     name: Optional[str] = None
     price: Optional[float] = None
-    images: Optional[list[ImageSchema]] = None
+    image_metadata: list[bool] | None = None
     info: Optional[str] = None
     stock: Optional[int] = None
     is_active: Optional[bool] = None
-    attributes: Optional[dict[int,tuple[str,str|None]]] = None
+    attributes: Optional[dict[int,AttributeData]] = None
     tags: Optional[list[int]] = None
     category_id: Optional[int] = None
 

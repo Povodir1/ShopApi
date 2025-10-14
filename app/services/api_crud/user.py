@@ -42,4 +42,11 @@ def change_role(user_id:int,role: Role):
         return UserSchema.model_validate(user,from_attributes=True)
 
 
+def ban_user(user_id:int,is_banned:bool = True):
+    with db_session() as session:
+        user = session.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError("User не найден")
+        user.is_banned = is_banned
+        return UserSchema.model_validate(user,from_attributes=True)
 
