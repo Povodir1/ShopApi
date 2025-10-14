@@ -11,7 +11,7 @@ class UserTagPreference(Base):
     user_id = Column(Integer, ForeignKey("users.id"),nullable=False)
     tag_id = Column(Integer, ForeignKey("tags.id"),nullable=False)
     score = Column(Integer,nullable=False,default=1)
-    updated_at = Column(DateTime,nullable=False, default=datetime.now)
+    updated_at = Column(DateTime,nullable=False, default=datetime.now, onupdate=datetime.now)
 
     __table_args__ = (
         CheckConstraint('score >= 1', name='positive_int'),)

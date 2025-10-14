@@ -3,7 +3,7 @@ from app.models.user import User
 from app.models.item import Item
 from app.models.user_tag_preference import UserTagPreference
 
-def update_user_preference(user_id,item_id,action = 0):
+def update_user_preference(user_id,item_id):
     with db_session() as session:
         user = session.query(User).filter(User.id == user_id).first()
         item = session.query(Item).filter(Item.id == item_id).first()
