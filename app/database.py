@@ -1,14 +1,19 @@
 from contextlib import contextmanager
-from sqlalchemy import create_engine,text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker,Session
 from app.config import settings
 from app.models.base import Base
 import redis
 
+
 engine = create_engine(settings.DB_URL)
 
 
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(bind=engine,class_=Session)
+
+def get_session():
+    with SessionLocal() as session:
+        yield session
 
 @contextmanager
 def db_session():

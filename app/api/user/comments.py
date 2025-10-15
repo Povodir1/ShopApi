@@ -5,29 +5,33 @@ from app.services.api_crud.comments import serv_get_comments,serv_patch_comment,
 from app.services.security import get_token
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
 from app.schemas.user import UserTokenDataSchema
+from app.database import get_session
+from sqlalchemy.orm.session import Session
+
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
 
 @router.get("/{item_id}",response_model=list[CommentSchema])
-def get_comments(item_id:int):
-    response = serv_get_comments(item_id)
+def get_comments(item_id:int,session:Session = Depends(get_session)):
+    response = serv_get_comments(item_id,session)
     return response
 
 @router.patch("/{item_id}",response_model=CommentSchema)
-async def patch_comments(item_id:int,
+def patch_comments(item_id:int,
                    message: Optional[str] = Form(None),
                    rating: float = Form(...),
                    media: Optional[list[UploadFile]] = File(None),
-                   user: UserTokenDataSchema = Depends(get_token)):
+                   user: UserTokenDataSchema = Depends(get_token),
+                   session:Session = Depends(get_session)):
         new_data = CommentUpdateSchema(message=message, rating=rating)
-        response = await serv_patch_comment(item_id,user.id,new_data,media)
+        response = serv_patch_comment(item_id,user.id,new_data,media,session)
         return response
 
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token)):
+def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
     try:
-        serv_delete_comment(item_id, user.id)
+        serv_delete_comment(item_id, user.id,session)
         return {"msg": "Comment deleted"}
     except ValueError as e:
         raise HTTPException(
@@ -39,16 +43,17 @@ def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token))
             detail=f"Internal server error: {str(e)}")
 
 @router.post("/{item_id}",response_model=CommentSchema,status_code=status.HTTP_201_CREATED)
-async def post_comments(
+def post_comments(
         item_id: int = Path(),
         message: Optional[str] = Form(None),
         rating: float = Form(...),
         media: Optional[list[UploadFile]] = File(None),
-        user: UserTokenDataSchema = Depends(get_token)
+        user: UserTokenDataSchema = Depends(get_token),
+        session:Session = Depends(get_session)
 ):
     try:
         new_com = CommentCreateSchema(item_id = item_id, message= message,rating=rating)
-        response = await serv_create_comment(new_com,user.id,media)
+        response = serv_create_comment(new_com,user.id,media,session)
         return response
     except ValueError as e:
         raise HTTPException(

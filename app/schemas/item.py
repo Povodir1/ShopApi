@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from app.schemas.image import ImageSchema
 from fastapi import Query
+
 class ItemCatalogSchema(BaseModel):
     id: int
     name: str
@@ -13,6 +14,7 @@ class ItemCatalogSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
 class AttributeData(BaseModel):
     value:str
     unit:str | None

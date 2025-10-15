@@ -6,6 +6,8 @@ from app.schemas.user import UserRegister, UserSchema, UserLogin
 from app.services.api_crud.user import create_user
 from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass,reset_password
 from app.services.emai_sender import send_email
+from app.database import get_session
+from sqlalchemy.orm.session import Session
 
 from app.database import auth_clients,password_reset_client
 import json
@@ -19,7 +21,6 @@ def token_json(tkn:str):
 
 def code_ver(data:dict,code):
     try:
-        print(type(data))
         stored_code = data.get("code")
         if str(stored_code) != str(code):
             raise ValueError("неверный код подтверждения")
@@ -42,15 +43,15 @@ def create_code(email:EmailStr,redis_db,ttl,new_data:dict|None = None):
     return code
 
 @router.post("/token")
-def token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user_data = user_by_email_pass(form_data.username,form_data.password)
-    new_token = create_token(user_data)
+def token(form_data: OAuth2PasswordRequestForm = Depends(),session:Session = Depends(get_session)):
+    user_data =  user_by_email_pass(form_data.username,form_data.password,session)
+    new_token =  create_token(user_data)
     return token_json(new_token)
 
 
 @router.post("/register/request",status_code=status.HTTP_200_OK)
-def request_code(user:UserRegister):
-    if not is_unique_email(user.email):
+def request_code(user:UserRegister,session:Session = Depends(get_session)):
+    if not is_unique_email(user.email,session):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Пользователь с таким Email уже зарегестрирован")
     code = create_code(user.email,auth_clients,300,{"user": user.model_dump()})
@@ -60,7 +61,7 @@ def request_code(user:UserRegister):
 
 
 @router.post("/register/confirm")
-def verify_code(email:EmailStr,code:str):
+def verify_code(email:EmailStr,code:str,session:Session = Depends(get_session)):
 
     data_json = auth_clients.get(email)
 
@@ -83,7 +84,7 @@ def verify_code(email:EmailStr,code:str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"{e}"
         )
-    new_user = create_user(UserRegister(**user_data))
+    new_user = create_user(UserRegister(**user_data),session)
     user_data = UserSchema(**new_user.model_dump())
     new_token = create_token(user_data.model_dump())
     return token_json(new_token)
@@ -112,12 +113,12 @@ def verify_code_for_pass(email:EmailStr,code:str):
             detail=f"{e}]")
 
 @router.post("/reset_password/confirm")
-def confirm_pass(email:EmailStr,code:str,new_password:str):
+def confirm_pass(email:EmailStr,code:str,new_password:str,session:Session = Depends(get_session)):
     data_json = password_reset_client.get(email)
 
     data = json.loads(data_json)
     code_ver(data,code)
-    reset_password(email, new_password)
+    reset_password(email, new_password,session)
     password_reset_client.delete(email)
     return {"Msg":"Пароль изменен"}
 

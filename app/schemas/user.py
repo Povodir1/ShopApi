@@ -24,8 +24,6 @@ class UserTokenDataSchema(BaseModel):
     currency:str
     language:str
 
-
-
 class UserSchema(BaseModel):
     id: int
     name: str
