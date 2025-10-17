@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker,Session
 from app.config import settings
@@ -8,25 +8,11 @@ import redis
 
 engine = create_engine(settings.DB_URL)
 
-
 SessionLocal = sessionmaker(bind=engine,class_=Session)
 
 def get_session():
     with SessionLocal() as session:
         yield session
-
-@contextmanager
-def db_session():
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
 
 def create_clear_db():
     Base.metadata.create_all(engine)

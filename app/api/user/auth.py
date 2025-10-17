@@ -4,7 +4,7 @@ from pydantic import EmailStr
 
 from app.schemas.user import UserRegister, UserSchema, UserLogin
 from app.services.api_crud.user import create_user
-from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass,reset_password
+from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass,reset_password,is_correct_pass
 from app.services.emai_sender import send_email
 from app.database import get_session
 from sqlalchemy.orm.session import Session
@@ -54,6 +54,7 @@ def request_code(user:UserRegister,session:Session = Depends(get_session)):
     if not is_unique_email(user.email,session):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Пользователь с таким Email уже зарегестрирован")
+    user.password_hash = is_correct_pass(user.password_hash)
     code = create_code(user.email,auth_clients,300,{"user": user.model_dump()})
 
     send_email(user.email,code,"Verify your account")
@@ -113,7 +114,7 @@ def verify_code_for_pass(email:EmailStr,code:str):
             detail=f"{e}]")
 
 @router.post("/reset_password/confirm")
-def confirm_pass(email:EmailStr,code:str,new_password:str,session:Session = Depends(get_session)):
+def confirm_pass(email:EmailStr,code:str,new_password:str = Depends(is_correct_pass),session:Session = Depends(get_session)):
     data_json = password_reset_client.get(email)
 
     data = json.loads(data_json)
@@ -126,6 +127,11 @@ def confirm_pass(email:EmailStr,code:str,new_password:str,session:Session = Depe
 
 @router.post("/login")
 def login(user:UserLogin):
-    user_data = user_by_email_pass(user.email, user.password_hash)
-    new_token = create_token(user_data)
-    return token_json(new_token)
+    try:
+        user_data = user_by_email_pass(user.email, user.password_hash)
+        new_token = create_token(user_data)
+        return token_json(new_token)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"{e}]")

@@ -3,7 +3,6 @@ import os.path
 
 from fastapi import UploadFile
 
-from app.database import db_session
 from app.models import Comment, CommentMedia
 from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema
 from sqlalchemy.orm import joinedload

@@ -1,6 +1,6 @@
 import datetime
 
-from app.database import db_session
+
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
 from app.services.preference_logic import update_user_preference

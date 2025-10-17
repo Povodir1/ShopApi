@@ -1,4 +1,4 @@
-from app.database import db_session
+
 from app.models import Order,BasketItem,OrderItem,User
 from app.schemas.order import OrderSchema,OrderItemSchema
 from app.services.emai_sender import send_email

@@ -1,4 +1,4 @@
-from app.database import db_session
+
 from app.models.favorite import FavoriteItem
 from app.schemas.favorite import FavouriteItemSchema
 

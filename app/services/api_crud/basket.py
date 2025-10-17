@@ -1,5 +1,5 @@
 
-from app.database import db_session
+
 from app.models.basket_item import BasketItem
 from app.schemas.basket_item import BasketItemSchema
 from sqlalchemy.orm import joinedload
@@ -37,12 +37,11 @@ def serv_get_basket_items(user_id,session):
     joinedload(BasketItem.items)).filter(BasketItem.user_id == user_id).all()
     res_data = []
     for item in basket_items:
+        rating = None
         if item.items.comments:
             ratings = [com.rating for com in item.items.comments if com.rating is not None]
             if ratings:
                 rating = round(sum(ratings) / len(ratings), 1)
-        else:
-            rating = None
         if item.items.images:
             res_images = [im for im in item.items.images if im.is_main == True][0].url
             if not res_images:

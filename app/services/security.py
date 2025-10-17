@@ -1,5 +1,7 @@
 import datetime
 import random
+import string
+
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends,HTTPException
@@ -7,7 +9,6 @@ from app.schemas.user import UserTokenDataSchema, UserSchema
 from passlib.context import CryptContext
 from app.config import settings
 from pydantic import EmailStr
-from app.database import db_session
 from app.models.user import User
 
 ALGORITHM = "HS256"
@@ -64,3 +65,10 @@ def is_admin(user:UserTokenDataSchema = Depends(get_token)):
     if user.role != 'admin':
         raise HTTPException(status_code=403, detail="Вы не админ")
     return user
+
+def is_correct_pass(password:str):
+    if len(password)<8:
+        raise ValueError("слишком коротко")
+    if password == password.lower():
+        raise ValueError("нужны загланые буквы")
+    return password
