@@ -1,6 +1,6 @@
 import requests
 from app.models.user import CurrencyType
-
+from app.exceptions import InvalidDataError
 currency_data ={}
 
 
@@ -22,4 +22,4 @@ def convert_currency(cur_type:CurrencyType,value_usd):
     elif cur_type == CurrencyType.RUB:
         return round((value_usd*currency_data[CurrencyType.USD]["Cur_OfficialRate"])/(currency_data[CurrencyType.RUB]["Cur_OfficialRate"]/currency_data[CurrencyType.RUB]["Cur_Scale"]),2)
     else:
-        raise ValueError("Неприемлемая валюта")
+        raise InvalidDataError("Неприемлемая валюта")

@@ -2,7 +2,7 @@
 from app.models import Order,BasketItem,OrderItem,User
 from app.schemas.order import OrderSchema,OrderItemSchema
 from app.services.emai_sender import send_email
-
+from app.exceptions import NoMoneyError,ObjectNotFoundError
 def serv_create_order(user_id:int,session):
     #задать пустой заказ
     order = Order(user_id = user_id,price = 0)
@@ -13,7 +13,7 @@ def serv_create_order(user_id:int,session):
     basket_items = session.query(BasketItem).filter(BasketItem.user_id == user_id).all()
 
     if not basket_items:
-        raise ValueError("Корзина пуста")
+        raise ObjectNotFoundError("Корзина пуста")
 
     res_price = 0
     for item in basket_items:
@@ -25,10 +25,10 @@ def serv_create_order(user_id:int,session):
     #оплата заказа юзером
     user = session.query(User).filter(User.id ==user_id).first()
     if not user:
-        raise ValueError("Пользователь не найден")
+        raise ObjectNotFoundError("Пользователь не найден")
 
     if user.money < res_price:
-        raise ValueError("Недостаточно средств")
+        raise NoMoneyError("Недостаточно средств")
 
     user.money -= res_price
 

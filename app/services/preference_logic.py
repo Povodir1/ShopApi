@@ -2,10 +2,13 @@
 from app.models.user import User
 from app.models.item import Item
 from app.models.user_tag_preference import UserTagPreference
+from app.exceptions import ObjectNotFoundError
 
 def update_user_preference(user_id,item_id,session):
     user = session.query(User).filter(User.id == user_id).first()
     item = session.query(Item).filter(Item.id == item_id).first()
+    if not user or not item:
+        raise ObjectNotFoundError("Не найден юзер или предмет")
 
     user_tags = {tag.tag_id:tag.score for tag in user.user_tag_preferences}
     item_tags = [tag.tag_id for tag in item.item_tags]

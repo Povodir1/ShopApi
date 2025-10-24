@@ -6,6 +6,7 @@ from fastapi import UploadFile
 from app.models import Comment, CommentMedia
 from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema
 from sqlalchemy.orm import joinedload
+from app.exceptions import ObjectNotFoundError,ObjectAlreadyExistError
 
 folder_path = os.path.join(os.path.abspath('.'), f"app/media/comments")
 
@@ -24,7 +25,7 @@ def serv_get_comments(item_id:int,session):
 async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema,media:list[UploadFile] |None,session):
     comment = session.query(Comment).filter(Comment.user_id ==user_id,Comment.item_id == item_id).first()
     if not comment:
-        raise ValueError("Комментарий не найден")
+        raise ObjectNotFoundError("Комментарий не найден")
     db_com_medias = []
     com_medias = []
     if media:
@@ -55,7 +56,7 @@ async def serv_create_comment(data:CommentCreateSchema,user_id:int,media:list[Up
     is_available = session.query(Comment).filter(Comment.user_id == user_id,
                                                  Comment.item_id == data.item_id).first()
     if is_available:
-        raise ValueError("Ты уже написал комментарий")
+        raise ObjectAlreadyExistError("Ты уже написал комментарий")
 
     comment = Comment(item_id = data.item_id,rating = data.rating,
                       message = data.message,user_id = user_id)
@@ -63,7 +64,7 @@ async def serv_create_comment(data:CommentCreateSchema,user_id:int,media:list[Up
     session.flush()
     db_com_medias = []
     com_medias = []
-    #исправить некорректный путь файлов
+
     if media:
         for ind,file in enumerate(media):
             path = os.path.join(folder_path,f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}")
@@ -83,7 +84,7 @@ async def serv_create_comment(data:CommentCreateSchema,user_id:int,media:list[Up
 def serv_delete_comment(item_id:int,user_id:int,session):
     comment = session.query(Comment).filter(Comment.user_id == user_id,Comment.item_id == item_id).first()
     if not comment:
-        raise ValueError("Комментарий не найден")
+        raise ObjectNotFoundError("Комментарий не найден")
     session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
     [os.remove(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f"{comment.id}.{user_id}." in f]
     session.delete(comment)

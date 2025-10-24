@@ -17,30 +17,14 @@ def get_basket(user:UserTokenDataSchema = Depends(get_token),session:Session = D
     return response
 
 @router.post("/{item_id}",response_model=BasketItemSchema,status_code=status.HTTP_201_CREATED)
-def add_to_basket(item_id:int,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
-    try:
-        response = serv_add_to_basket(user.id,item_id,session)
-        return response
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
-        )
+def add_to_basket(item_id:int,count:int,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
+    response = serv_add_to_basket(user.id,item_id,count,session)
+    return response
+
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_from_basket(item_id,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
-    try:
-        serv_delete_from_basket(item_id,user.id,session)
-        return {"msg": "Item deleted"}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
-        )
+    serv_delete_from_basket(item_id,user.id,session)
+    return {"msg": "Item deleted"}
 
 

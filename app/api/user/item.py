@@ -22,32 +22,18 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
                  page:int = 1,
                  sort_type:SortType = SortType.by_rating,
                  user:UserTokenDataSchema = Depends(get_token),
-                 session:Session = Depends(get_session)):
-    try:
-        response = get_all_items(limit,page,sort_type,filters,user.id,CurrencyType[user.currency],session)
-        return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+                 session:Session = Depends(get_session)
+                 ):
+    response = get_all_items(limit,page,sort_type,filters,user.id,CurrencyType[user.currency],session)
+    return response
+
 
 
 @router.get("/{item_id}",response_model=ItemSoloSchema)
 def get_item(item_id,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
-    try:
-        response = serv_get_item(item_id,user.id if user else None,session)
-        return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
-        )
+    response = serv_get_item(item_id,user.id if user else None,session)
+    return response
+
 
 
 

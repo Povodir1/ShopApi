@@ -17,33 +17,25 @@ def get_comments(item_id:int,session:Session = Depends(get_session)):
     return response
 
 @router.patch("/{item_id}",response_model=CommentSchema)
-def patch_comments(item_id:int,
+async def patch_comments(item_id:int,
                    message: Optional[str] = Form(None),
                    rating: float = Form(...),
                    media: Optional[list[UploadFile]] = File(None),
                    user: UserTokenDataSchema = Depends(get_token),
                    session:Session = Depends(get_session)):
         new_data = CommentUpdateSchema(message=message, rating=rating)
-        response = serv_patch_comment(item_id,user.id,new_data,media,session)
+        response = await serv_patch_comment(item_id,user.id,new_data,media,session)
         return response
 
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_comments(item_id:int, user: UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
-    try:
-        serv_delete_comment(item_id, user.id,session)
-        return {"msg": "Comment deleted"}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}")
+    serv_delete_comment(item_id, user.id,session)
+    return {"msg": "Comment deleted"}
+
 
 @router.post("/{item_id}",response_model=CommentSchema,status_code=status.HTTP_201_CREATED)
-def post_comments(
+async def post_comments(
         item_id: int = Path(),
         message: Optional[str] = Form(None),
         rating: float = Form(...),
@@ -51,21 +43,9 @@ def post_comments(
         user: UserTokenDataSchema = Depends(get_token),
         session:Session = Depends(get_session)
 ):
-    try:
         new_com = CommentCreateSchema(item_id = item_id, message= message,rating=rating)
-        response = serv_create_comment(new_com,user.id,media,session)
+        response = await serv_create_comment(new_com,user.id,media,session)
         return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}")
-
-
-
 
 
 

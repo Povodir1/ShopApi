@@ -4,10 +4,11 @@ from pydantic import EmailStr
 
 from app.schemas.user import UserRegister, UserSchema, UserLogin
 from app.services.api_crud.user import create_user
-from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass,reset_password,is_correct_pass
+from app.services.security import create_token,access_code, is_unique_email, user_by_email_pass,reset_password,is_correct_pass,code_ver
 from app.services.emai_sender import send_email
 from app.database import get_session
 from sqlalchemy.orm.session import Session
+from app.exceptions import InvalidDataError
 
 from app.database import auth_clients,password_reset_client
 import json
@@ -17,15 +18,6 @@ router = APIRouter(tags=["Auth"])
 def token_json(tkn:str):
     return {"access_token": tkn,
             "token_type": "bearer"}
-
-
-def code_ver(data:dict,code):
-    try:
-        stored_code = data.get("code")
-        if str(stored_code) != str(code):
-            raise ValueError("неверный код подтверждения")
-    except Exception as e:
-        raise e
 
 
 def create_code(email:EmailStr,redis_db,ttl,new_data:dict|None = None):
@@ -66,25 +58,20 @@ def verify_code(email:EmailStr,code:str,session:Session = Depends(get_session)):
 
     data_json = auth_clients.get(email)
 
-    try:
-        data = json.loads(data_json)
-        if not data_json:
-            raise ValueError("Код не найден или истек срок действия")
-        #
-        if data.get("try_counts") ==0:
-            auth_clients.delete(email)
-            raise ValueError("Код больше не действителен")
-        data["try_counts"] -= 1
-        auth_clients.set(email, json.dumps(data))
-        #
-        code_ver(data,code)
-        user_data = data.get("user")
+
+    data = json.loads(data_json)
+    if not data_json:
+        raise InvalidDataError("Код не найден или истек срок действия")
+    #
+    if data.get("try_counts") ==0:
         auth_clients.delete(email)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"{e}"
-        )
+        raise InvalidDataError("Код больше не действителен")
+    data["try_counts"] -= 1
+    auth_clients.set(email, json.dumps(data))
+    #
+    code_ver(data,code)
+    user_data = data.get("user")
+    auth_clients.delete(email)
     new_user = create_user(UserRegister(**user_data),session)
     user_data = UserSchema(**new_user.model_dump())
     new_token = create_token(user_data.model_dump())
@@ -99,19 +86,14 @@ def forgot_password(email:EmailStr):
 @router.post("/reset_password/verify")
 def verify_code_for_pass(email:EmailStr,code:str):
     data_json = password_reset_client.get(email)
-    try:
-        data = json.loads(data_json)
-        if data.get("try_counts") ==0:
-            password_reset_client.delete(email)
-            raise ValueError("Код больше не действителен")
-        data["try_counts"] -= 1
-        password_reset_client.set(email, json.dumps(data))
-        code_ver(data, code)
-        return {"msg":"go to '/reset_password/confirm' to confirm new password"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"{e}]")
+    data = json.loads(data_json)
+    if data.get("try_counts") ==0:
+        password_reset_client.delete(email)
+        raise InvalidDataError("Код больше не действителен")
+    data["try_counts"] -= 1
+    password_reset_client.set(email, json.dumps(data))
+    code_ver(data, code)
+    return {"msg":"go to '/reset_password/confirm' to confirm new password"}
 
 @router.post("/reset_password/confirm")
 def confirm_pass(email:EmailStr,code:str,new_password:str = Depends(is_correct_pass),session:Session = Depends(get_session)):
@@ -126,12 +108,7 @@ def confirm_pass(email:EmailStr,code:str,new_password:str = Depends(is_correct_p
 
 
 @router.post("/login")
-def login(user:UserLogin):
-    try:
-        user_data = user_by_email_pass(user.email, user.password_hash)
-        new_token = create_token(user_data)
-        return token_json(new_token)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{e}]")
+def login(user:UserLogin,session:Session = Depends(get_session)):
+    user_data = user_by_email_pass(user.email, user.password_hash,session)
+    new_token = create_token(user_data)
+    return token_json(new_token)

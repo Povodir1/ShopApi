@@ -9,22 +9,12 @@ router = APIRouter(prefix="/users",tags=["Users"],dependencies=[Depends(is_admin
 
 @router.patch("/change_role")
 def change_user_role(user_id:int,role:Role,session:Session = Depends(get_session)):
-    try:
-        response = change_role(user_id,role,session)
-        return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    response = change_role(user_id,role,session)
+    return response
+
 
 @router.patch("/ban")
 def ban_user(user_id:int,is_banned:bool = True,session:Session = Depends(get_session)):
-    try:
-        response = ban_user(user_id,is_banned,session)
-        return response
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    response = ban_user(user_id,is_banned,session)
+    return response
+

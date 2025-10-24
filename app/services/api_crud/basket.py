@@ -3,6 +3,7 @@
 from app.models.basket_item import BasketItem
 from app.schemas.basket_item import BasketItemSchema
 from sqlalchemy.orm import joinedload
+from app.exceptions import ObjectNotFoundError
 
 def serv_add_to_basket(user_id:int,item_id:int,count:int ,session):
     existing_item = session.query(BasketItem).filter(BasketItem.user_id==user_id,
@@ -58,7 +59,7 @@ def serv_delete_from_basket(item_id:int,user_id:int,session):
     item = session.query(BasketItem).filter(BasketItem.user_id==user_id,
                                             BasketItem.item_id==item_id).first()
     if not item:
-        raise ValueError("Предмет не найден")
+        raise ObjectNotFoundError("Предмет не найден")
     session.delete(item)
 
 

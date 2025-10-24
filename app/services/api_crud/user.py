@@ -1,12 +1,13 @@
 from app.schemas.user import UserSchema, UserRegister, UserPatch
 from app.services.security import  hash_pass
 from app.models.user import User,CurrencyType,LanguageList,Role
+from app.exceptions import ObjectNotFoundError,InvalidDataError
 
 
 def get_user(user_id:int,session):
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
-        raise ValueError("Нет пользователя с таким id")
+        raise ObjectNotFoundError("Нет пользователя с таким id")
     return UserSchema.model_validate(user,from_attributes=True)
 
 def create_user(user_data: UserRegister,session):
@@ -19,11 +20,11 @@ def create_user(user_data: UserRegister,session):
 def patch_user(user_id:int, new_data:UserPatch,session):
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
-        raise ValueError("Нет пользователя с таким id")
+        raise ObjectNotFoundError("Нет пользователя с таким id")
     if new_data.currency not in [i.name for i in CurrencyType] and new_data.currency is not None:
-        raise ValueError("Неверная валюта")
+        raise InvalidDataError("Неверная валюта")
     if new_data.language not in [i.name for i in LanguageList] and new_data.language is not None:
-        raise ValueError("Неверный язык")
+        raise InvalidDataError("Неверный язык")
     for key,value in new_data.model_dump(exclude_none=True).items():
         setattr(user,key,value)
     session.flush()
@@ -32,7 +33,7 @@ def patch_user(user_id:int, new_data:UserPatch,session):
 def change_role(user_id:int,role: Role,session):
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
-        raise ValueError("User не найден")
+        raise ObjectNotFoundError("User не найден")
     user.role = role
     return UserSchema.model_validate(user,from_attributes=True)
 
@@ -40,7 +41,7 @@ def change_role(user_id:int,role: Role,session):
 def ban_user(user_id:int,is_banned:bool,session):
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
-        raise ValueError("User не найден")
+        raise ObjectNotFoundError("User не найден")
     user.is_banned = is_banned
     return UserSchema.model_validate(user,from_attributes=True)
 

@@ -11,8 +11,15 @@ engine = create_engine(settings.DB_URL)
 SessionLocal = sessionmaker(bind=engine,class_=Session)
 
 def get_session():
-    with SessionLocal() as session:
+    session = SessionLocal()
+    try:
         yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 def create_clear_db():
     Base.metadata.create_all(engine)

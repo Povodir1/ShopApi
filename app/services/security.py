@@ -1,7 +1,5 @@
 import datetime
 import random
-import string
-
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends,HTTPException
@@ -10,6 +8,7 @@ from passlib.context import CryptContext
 from app.config import settings
 from pydantic import EmailStr
 from app.models.user import User
+from app.exceptions import ObjectNotFoundError,InvalidDataError
 
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -48,9 +47,9 @@ def is_unique_email(email:EmailStr,session):
 def user_by_email_pass(email:str|EmailStr,password:str,session):
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise ValueError("Нет пользователя с таким email")
+        raise ObjectNotFoundError("Нет пользователя с таким email")
     if not verify_pass(password,user.password_hash):
-        raise ValueError("Неверный пароль")
+        raise InvalidDataError("Неверный пароль")
     user.last_login = datetime.datetime.now()
     return UserTokenDataSchema(id = user.id,name = user.name,role = user.role,currency=user.currency.name,language=user.language.name)
 
@@ -68,7 +67,13 @@ def is_admin(user:UserTokenDataSchema = Depends(get_token)):
 
 def is_correct_pass(password:str):
     if len(password)<8:
-        raise ValueError("слишком коротко")
+        raise InvalidDataError("слишком коротко")
     if password == password.lower():
-        raise ValueError("нужны загланые буквы")
+        raise InvalidDataError("нужны загланые буквы")
     return password
+
+
+def code_ver(data:dict,code):
+    stored_code = data.get("code")
+    if str(stored_code) != str(code):
+        raise InvalidDataError("неверный код подтверждения")

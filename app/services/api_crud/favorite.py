@@ -1,13 +1,14 @@
 
 from app.models.favorite import FavoriteItem
 from app.schemas.favorite import FavouriteItemSchema
+from app.exceptions import ObjectAlreadyExistError,ObjectNotFoundError
 
 def serv_add_to_favorite(user_id:int,item_id:int,session):
     existing_item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id,
                                                        FavoriteItem.item_id==item_id).first()
 
     if existing_item:
-        raise ValueError("Предмет уже в избранном")
+        raise ObjectAlreadyExistError("Предмет уже в избранном")
     else:
         favorite_item = FavoriteItem(user_id=user_id,item_id=item_id)
         session.add(favorite_item)
@@ -50,6 +51,6 @@ def serv_delete_from_favorite(item_id:int,user_id:int,session):
     item = session.query(FavoriteItem).filter(FavoriteItem.user_id==user_id,
                                               FavoriteItem.item_id==item_id).first()
     if not item:
-        raise ValueError("Предмет не найден")
+        raise ObjectNotFoundError("Предмет не найден")
     session.delete(item)
     return True
