@@ -5,6 +5,8 @@ from typing import Optional
 from app.schemas.image import ImageSchema
 from fastapi import Query
 
+
+
 class ItemCatalogSchema(BaseModel):
     id: int
     name: str
@@ -14,6 +16,11 @@ class ItemCatalogSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CatalogSchema(BaseModel):
+    items:list[ItemCatalogSchema]
+    current_page:int
+    max_page:int
 
 class AttributeData(BaseModel):
     value:str

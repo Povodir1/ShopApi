@@ -13,8 +13,7 @@ from app.exceptions import ObjectNotFoundError,InvalidDataError
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-user_auth = OAuth2PasswordBearer(tokenUrl="/token")
-user_auth_optional = OAuth2PasswordBearer(tokenUrl="/token", auto_error=False)
+user_auth = OAuth2PasswordBearer(tokenUrl="/login")
 
 def get_token(token:str = Depends(user_auth)):
     return decode_token(token)

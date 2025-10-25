@@ -4,25 +4,31 @@ from app.models.item import Item
 from app.models.user_tag_preference import UserTagPreference
 from app.exceptions import ObjectNotFoundError
 
-def update_user_preference(user_id,item_id,session):
-    user = session.query(User).filter(User.id == user_id).first()
-    item = session.query(Item).filter(Item.id == item_id).first()
+def update_user_preference(user_id: int, item_id: int, session):
+    user = session.query(User).filter_by(id=user_id).first()
+    item = session.query(Item).filter_by(id=item_id).first()
+
     if not user or not item:
-        raise ObjectNotFoundError("Не найден юзер или предмет")
+        raise ObjectNotFoundError("Юзер или предмет не найден")
 
-    user_tags = {tag.tag_id:tag.score for tag in user.user_tag_preferences}
-    item_tags = [tag.tag_id for tag in item.item_tags]
+    # Map tag_id -> UserTagPreference object
+    user_tag_objs = {utp.tag_id: utp for utp in user.user_tag_preferences}
+    item_tag_ids = {it.tag_id for it in item.item_tags}
 
-    for tag,val in user_tags.items():
-        if tag in item_tags:
-            updated_tag = session.query(UserTagPreference).filter(UserTagPreference.tag_id == tag).first()
-            updated_tag.score +=1
+    # Tags that user already has
+    for tag_id, utp in list(user_tag_objs.items()):
+        if tag_id in item_tag_ids:
+            utp.score += 1
+            session.add(utp)
         else:
-            user_tags[tag] -= 1
-            if user_tags[tag] == 0:
-                user_tag = session.query(UserTagPreference).filter(UserTagPreference.tag_id == tag).first()
-                session.delete(user_tag)
-    new_tags = [tag for tag in item_tags if tag not in user_tags.keys()]
-    for tag in new_tags:
-        session.add(UserTagPreference(user_id = user_id,tag_id = tag,score = 1))
+            if utp.score == 1:
+                session.delete(utp)
+            else:
+                utp.score -= 1
+
+    # New tags from item that user doesn't have
+    new_tag_ids = item_tag_ids - set(user_tag_objs.keys())
+    for tag_id in new_tag_ids:
+        new_utp = UserTagPreference(user_id=user_id, tag_id=tag_id, score=1)
+        session.add(new_utp)
 

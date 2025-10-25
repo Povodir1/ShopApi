@@ -12,3 +12,7 @@ class BasketItemSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class BasketSchema(BaseModel):
+    items: list[BasketItemSchema]
+    full_price:float

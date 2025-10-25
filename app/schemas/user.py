@@ -1,19 +1,16 @@
-from pydantic import BaseModel, EmailStr, condecimal
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
-from app.models.user import CurrencyType
+
+
 
 class UserPatch(BaseModel):
     currency:str|None = None
     language:str|None = None
 
 
-class UserLogin(BaseModel):
+class UserRegister(BaseModel):
     email: EmailStr
     password_hash:str
-
-
-class UserRegister(UserLogin):
     name:str
 
 
@@ -29,7 +26,7 @@ class UserSchema(BaseModel):
     name: str
     role: str
     email: EmailStr
-    money: condecimal(max_digits=10, decimal_places=2)
+    money: float
     created_at: datetime
     currency:str
     language:str

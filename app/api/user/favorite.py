@@ -13,12 +13,18 @@ def get_favorite(user:UserTokenDataSchema = Depends(get_token),session:Session =
     return response
 
 @router.post("/{item_id}",response_model=FavouriteItemSchema,status_code=status.HTTP_201_CREATED)
-def add_to_favorite(item_id:int,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
+def add_to_favorite(item_id:int,
+                    user:UserTokenDataSchema = Depends(get_token),
+                    session:Session = Depends(get_session)
+                    ):
     response = serv_add_to_favorite(user.id,item_id,session)
     return response
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_from_favorite(item_id,user:UserTokenDataSchema = Depends(get_token),session:Session = Depends(get_session)):
+def delete_from_favorite(item_id:int,
+                         user:UserTokenDataSchema = Depends(get_token),
+                         session:Session = Depends(get_session)
+                         ):
     serv_delete_from_favorite(item_id,user.id,session)
     return {"msg": "Item deleted"}
 

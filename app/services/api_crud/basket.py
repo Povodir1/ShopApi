@@ -1,11 +1,15 @@
 
 
-from app.models.basket_item import BasketItem
-from app.schemas.basket_item import BasketItemSchema
+from app.models import BasketItem,Item
+from app.schemas.basket_item import BasketItemSchema,BasketSchema
 from sqlalchemy.orm import joinedload
 from app.exceptions import ObjectNotFoundError
 
 def serv_add_to_basket(user_id:int,item_id:int,count:int ,session):
+    item = session.query(Item).filter(Item.id == item_id).first()
+    if not item:
+        raise ObjectNotFoundError("Предмет не найден")
+
     existing_item = session.query(BasketItem).filter(BasketItem.user_id==user_id,
                                                      BasketItem.item_id==item_id).first()
 
@@ -52,7 +56,7 @@ def serv_get_basket_items(user_id,session):
         res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,
                                          images =res_images,count = item.count,
                                          full_price = item.count*item.items.price,rating = rating))
-    return res_data
+    return BasketSchema(items=res_data,full_price= sum([i.full_price for i in res_data]))
 
 
 def serv_delete_from_basket(item_id:int,user_id:int,session):

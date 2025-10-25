@@ -1,7 +1,7 @@
 import datetime
 
 
-from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData
+from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
 from app.services.preference_logic import update_user_preference
 from app.services.currency_tools import convert_currency
@@ -28,9 +28,9 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
                                               joinedload(Item.categories)).filter(Item.is_active == True)
     #фильтрация
     if filters.min_price:
-        items_query = items_query.filter(Item.price >= filters.min_price)
+        items_query = items_query.filter(Item.price >= convert_currency(currency_type,CurrencyType.USD,filters.min_price))
     if filters.max_price:
-        items_query = items_query.filter(Item.price <= filters.max_price)
+        items_query = items_query.filter(Item.price <= convert_currency(currency_type,CurrencyType.USD,filters.max_price))
     if filters.category:
 
         def get_all_child_category_ids(category_id):
@@ -70,7 +70,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
         else:
             res_images = None
         res_data.append(ItemCatalogSchema(id=item.id, name=item.name, images=res_images,
-                             price=convert_currency(currency_type,item.price), rating=rating))
+                             price=convert_currency(CurrencyType.USD,currency_type,item.price), rating=rating))
 
     # соотировка по расчетным полям
     if sort_type == SortType.by_rating:
@@ -87,14 +87,14 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
             item_score = sum([score for tag_id, score in user_tags_dict.items() if tag_id in applied_item_tags])
             return item_score
         res_data.sort(key = lambda x:get_item_score(x.id))
-
+    max_page = (len(res_data)//limit_num if len(res_data)/limit_num == len(res_data)//limit_num else len(res_data)//limit_num + 1)
     res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
 
-    return res_data
+    return CatalogSchema(items=res_data,current_page=page,max_page=max_page)
 
 
 
-def serv_get_item(item_id:int,user_id:int,session):
+def serv_get_item(item_id:int,user_id:int,currency_type:CurrencyType,session):
     item = session.query(Item).options(joinedload(Item.comments),
                                        joinedload(Item.images)).filter(Item.id ==item_id,
                                                                        Item.is_active == True).first()
@@ -113,7 +113,7 @@ def serv_get_item(item_id:int,user_id:int,session):
 
     item.views_count +=1
     return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
-                          price = item.price,rating = rating,info= item.info,stock = item.stock)
+                          price = convert_currency(CurrencyType.USD,currency_type,item.price),rating = rating,info= item.info,stock = item.stock)
 
 
 async def create_item(add_item:ItemCreateSchema, media: list[UploadFile] | None ,session):

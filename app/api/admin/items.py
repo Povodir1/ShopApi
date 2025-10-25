@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, status, Depends,Form,File, UploadFile
 
 from app.services.api_crud.item import create_item,serv_delete_item, serv_patch_item
-from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemSoloSchema
+from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemSoloSchema,CatalogSchema
 from app.services.security import is_admin
 import json
 from app.database import get_session
