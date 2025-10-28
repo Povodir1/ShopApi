@@ -3,12 +3,15 @@ from typing import Optional
 from fastapi import APIRouter, status, Depends,Form,File, UploadFile
 
 from app.services.api_crud.item import create_item,serv_delete_item, serv_patch_item
-from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemSoloSchema,CatalogSchema
-from app.services.security import is_admin
+from app.schemas.item import ItemCreateSchema,ItemPatchSchema,ItemSoloSchema
+from app.services.security import check_permissions
+from app.models.permission import ResourceEnum as Res, ActionEnum as Act
 import json
 from app.database import get_session
 from sqlalchemy.orm.session import Session
-router = APIRouter(prefix="/items",tags=["Items"],dependencies=[Depends(is_admin)])
+
+
+router = APIRouter(prefix="/items",tags=["Items"])
 
 
 
@@ -22,6 +25,7 @@ def post_item(name: str = Form(...),
               attributes: str = Form(...),
               tags: str = Form(...),
               category_id:int = Form(...),
+              perm = Depends(check_permissions(Res.ITEMS,Act.CREATE)),
               session:Session = Depends(get_session)
               ):
         new_item = ItemCreateSchema(name = name,price = price,info = info,
@@ -45,6 +49,7 @@ def patch_item( item_id:int|None,
                 tags: str | None = Form(None),
                 is_active:Optional[bool]= Form(None),
                 category_id:int |None = Form(None),
+                perm = Depends(check_permissions(Res.ITEMS,Act.UPDATE)),
                 session:Session = Depends(get_session)
                 ):
 

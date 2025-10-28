@@ -1,6 +1,6 @@
 from app.schemas.user import UserSchema, UserRegister, UserPatch
 from app.services.security import  hash_pass
-from app.models.user import User,CurrencyType,LanguageList,Role
+from app.models.user import User,CurrencyType,LanguageList
 from app.exceptions import ObjectNotFoundError,InvalidDataError
 
 
@@ -30,7 +30,7 @@ def patch_user(user_id:int, new_data:UserPatch,session):
     session.flush()
     return UserSchema.model_validate(user,from_attributes=True)
 
-def change_role(user_id:int,role: Role,session):
+def change_role(user_id:int,role: str,session):
     user = session.query(User).filter(User.id == user_id).first()
     if not user:
         raise ObjectNotFoundError("User не найден")

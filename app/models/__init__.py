@@ -14,3 +14,5 @@ from app.models.comment_media import CommentMedia
 from app.models.item_tag import ItemTag
 from app.models.tag import Tag
 from app.models.user_tag_preference import UserTagPreference
+from app.models.permission import Permission
+from app.models.role import Role

@@ -1,11 +1,11 @@
-
-
 from app.models import BasketItem,Item
 from app.schemas.basket_item import BasketItemSchema,BasketSchema
 from sqlalchemy.orm import joinedload
 from app.exceptions import ObjectNotFoundError
+from app.services.currency_tools import convert_currency
+from app.models.user import CurrencyType
 
-def serv_add_to_basket(user_id:int,item_id:int,count:int ,session):
+def serv_add_to_basket(user_id:int,item_id:int,count:int,currency_type:CurrencyType ,session):
     item = session.query(Item).filter(Item.id == item_id).first()
     if not item:
         raise ObjectNotFoundError("Предмет не найден")
@@ -34,10 +34,11 @@ def serv_add_to_basket(user_id:int,item_id:int,count:int ,session):
         res_images = None
     return BasketItemSchema(id = basket_item.id,item_id = basket_item.item_id,
                             item_name = basket_item.items.name,images =res_images,
-                            count = basket_item.count,full_price = basket_item.count*basket_item.items.price,
+                            count = basket_item.count,
+                            full_price = convert_currency(CurrencyType.USD,currency_type,basket_item.count*basket_item.items.price),
                             rating = rating)
 
-def serv_get_basket_items(user_id,session):
+def serv_get_basket_items(user_id:int,currency_type:CurrencyType,session):
     basket_items = session.query(BasketItem).options(
     joinedload(BasketItem.items)).filter(BasketItem.user_id == user_id).all()
     res_data = []
@@ -55,8 +56,8 @@ def serv_get_basket_items(user_id,session):
             res_images = None
         res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,
                                          images =res_images,count = item.count,
-                                         full_price = item.count*item.items.price,rating = rating))
-    return BasketSchema(items=res_data,item_count= len(res_data),full_price= sum([i.full_price for i in res_data]))
+                                         full_price = convert_currency(CurrencyType.USD,currency_type,item.count*item.items.price),rating = rating))
+    return BasketSchema(items=res_data,item_count= len(res_data),full_price= convert_currency(CurrencyType.USD,currency_type,sum([i.full_price for i in res_data])))
 
 
 def serv_delete_from_basket(item_id:int,user_id:int,session):

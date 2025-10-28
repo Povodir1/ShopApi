@@ -7,9 +7,11 @@ from app.schemas.user import UserTokenDataSchema, UserSchema
 from passlib.context import CryptContext
 from app.config import settings
 from pydantic import EmailStr
+from app.models.permission import Permission,ActionEnum,ResourceEnum
+from app.models.role import Role
 from app.models.user import User
-from app.exceptions import ObjectNotFoundError,InvalidDataError
-from app.database import refresh_token_client,access_blacklist_client
+from app.exceptions import ObjectNotFoundError,InvalidDataError,NoPermissionsError
+from app.database import refresh_token_client,access_blacklist_client,get_session
 import json
 ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -65,7 +67,7 @@ def user_by_email_pass(email:str|EmailStr,password:str,session):
     if not verify_pass(password,user.password_hash):
         raise InvalidDataError("Неверный пароль")
     user.last_login = datetime.datetime.now()
-    return UserTokenDataSchema(id = user.id,name = user.name,role = user.role,currency=user.currency.name,language=user.language.name)
+    return UserTokenDataSchema(id = user.id,name = user.name,role = user.roles.name,currency=user.currency.name,language=user.language.name)
 
 
 def reset_password(email:EmailStr|str,new_password,session):
@@ -74,10 +76,6 @@ def reset_password(email:EmailStr|str,new_password,session):
     session.flush()
     return UserSchema.model_validate(user,from_attributes=True)
 
-def is_admin(user:UserTokenDataSchema = Depends(get_token)):
-    if user.role != 'admin':
-        raise HTTPException(status_code=403, detail="Вы не админ")
-    return user
 
 def is_correct_pass(password:str):
     if len(password)<8:
@@ -105,7 +103,7 @@ def update_access_token(refresh_token:str,session):
         raise InvalidDataError("Invalid token")
     user = session.query(User).filter(User.id == payload["id"]).first()
     new_token = create_access_token(UserTokenDataSchema(id = user.id,name=user.name,
-                                                 role = user.role,currency=user.currency,
+                                                 role = user.roles.name,currency=user.currency,
                                                  language=user.language))
     return new_token
 
@@ -135,3 +133,16 @@ def create_code(email:EmailStr,
         redis_db.delete(email)
     redis_db.setex(email, ttl, data_json)
     return code
+
+
+
+def check_permissions(resource:ResourceEnum,
+                      action:ActionEnum):
+    def wrapped(user:UserTokenDataSchema = Depends(get_token),
+               session = Depends(get_session)):
+        user_permissions = session.query(Permission).join(Role).filter( Role.name == user.role,
+                                                                        Permission.resource == resource.value,
+                                                                        Permission.action == action.value).first()
+        if not user_permissions:
+            raise NoPermissionsError(detail="No permissions")
+    return wrapped
