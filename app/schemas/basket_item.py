@@ -15,4 +15,5 @@ class BasketItemSchema(BaseModel):
 
 class BasketSchema(BaseModel):
     items: list[BasketItemSchema]
+    item_count:int
     full_price:float

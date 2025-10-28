@@ -11,8 +11,8 @@ def get_user(user_id:int,session):
     return UserSchema.model_validate(user,from_attributes=True)
 
 def create_user(user_data: UserRegister,session):
-    user = User(**user_data.model_dump())
-    user.password_hash = hash_pass(user_data.password_hash  )
+    user = User(name = user_data.name,email = user_data.email)
+    user.password_hash = hash_pass(user_data.password)
     session.add(user)
     session.flush()
     return UserSchema.model_validate(user,from_attributes=True)

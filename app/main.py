@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.user.profile import router as user_router
 from app.api.user.item import router as item_router
-from app.api.user.auth import router as auth_router
+from app.api.auth import router as auth_router
 from app.api.user.comments import router as comment_router
 from app.api.user.basket import router as basket_router
 from app.api.user.order import router as order_router

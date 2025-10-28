@@ -10,7 +10,8 @@ class UserPatch(BaseModel):
 
 class UserRegister(BaseModel):
     email: EmailStr
-    password_hash:str
+    password:str
+    password_again:str
     name:str
 
 

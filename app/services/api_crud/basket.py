@@ -56,7 +56,7 @@ def serv_get_basket_items(user_id,session):
         res_data.append(BasketItemSchema(id = item.id,item_id = item.item_id,item_name = item.items.name,
                                          images =res_images,count = item.count,
                                          full_price = item.count*item.items.price,rating = rating))
-    return BasketSchema(items=res_data,full_price= sum([i.full_price for i in res_data]))
+    return BasketSchema(items=res_data,item_count= len(res_data),full_price= sum([i.full_price for i in res_data]))
 
 
 def serv_delete_from_basket(item_id:int,user_id:int,session):

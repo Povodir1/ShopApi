@@ -7,11 +7,23 @@ from app.models import Comment, CommentMedia
 from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema
 from sqlalchemy.orm import joinedload
 from app.exceptions import ObjectNotFoundError,ObjectAlreadyExistError
+from enum import Enum
 
 folder_path = os.path.join(os.path.abspath('.'), f"app/media/comments")
 
-def serv_get_comments(item_id:int,session):
-    comments = session.query(Comment).options(joinedload(Comment.users)).filter(Comment.item_id==item_id).all()
+
+class SortType(Enum):
+    by_rating = "rating_desc"
+    by_date = "date_desc"
+
+def serv_get_comments(item_id:int,sort_type:SortType,session):
+    comments_query = session.query(Comment).options(joinedload(Comment.users)).filter(Comment.item_id==item_id)
+    if sort_type == SortType.by_date:
+        comments_query = comments_query.order_by(Comment.created_at)
+    elif sort_type == SortType.by_rating:
+        comments_query = comments_query.order_by(Comment.rating.desc())
+    comments = comments_query.all()
+
     comment_list = []
     for comment in comments:
         com_media = [CommentMediaSchema(url = med.url,type = med.media_type) for med in comment.comment_medias]

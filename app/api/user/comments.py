@@ -1,21 +1,23 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File, Form, Path
+from fastapi import APIRouter, status, Depends, UploadFile, File, Form, Path
 from app.services.api_crud.comments import serv_get_comments,serv_patch_comment,serv_delete_comment,serv_create_comment
 from app.services.security import get_token
 from app.schemas.comment import CommentUpdateSchema,CommentCreateSchema,CommentSchema
 from app.schemas.user import UserTokenDataSchema
 from app.database import get_session
 from sqlalchemy.orm.session import Session
+from app.services.api_crud.comments import SortType
 
 router = APIRouter(prefix="/comments",tags=["Comments"])
 
 
 @router.get("/{item_id}",response_model=list[CommentSchema])
 def get_comments(item_id:int,
+                 sort_type:SortType = SortType.by_date,
                  session:Session = Depends(get_session)
                  ):
-    response = serv_get_comments(item_id,session)
+    response = serv_get_comments(item_id,sort_type,session)
     return response
 
 @router.patch("/{item_id}",response_model=CommentSchema)

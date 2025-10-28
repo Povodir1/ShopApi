@@ -37,4 +37,14 @@ password_reset_client = redis.Redis(host=settings.REDIS_HOST,
                      db = 1,
                      decode_responses=settings.REDIS_IS_DECODE)
 
+refresh_token_client = redis.Redis(host=settings.REDIS_HOST,
+                     port = settings.REDIS_PORT,
+                     db = 2,
+                     decode_responses=settings.REDIS_IS_DECODE)
+
+access_blacklist_client = redis.Redis(host=settings.REDIS_HOST,
+                     port = settings.REDIS_PORT,
+                     db = 3,
+                     decode_responses=settings.REDIS_IS_DECODE)
+
 
