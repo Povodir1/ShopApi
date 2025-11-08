@@ -2,7 +2,7 @@ from app.models import BasketItem,Item
 from app.schemas.basket_item import BasketItemSchema,BasketSchema
 from sqlalchemy.orm import joinedload
 from app.exceptions import ObjectNotFoundError
-from app.services.currency_tools import convert_currency
+from app.services.utils.currency_tools import convert_currency
 from app.models.user import CurrencyType
 
 def serv_add_to_basket(user_id:int,item_id:int,count:int,currency_type:CurrencyType ,session):

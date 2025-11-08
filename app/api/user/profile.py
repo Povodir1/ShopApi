@@ -10,20 +10,18 @@ from app.models.permission import ResourceEnum as Res, ActionEnum as Act
 router = APIRouter(prefix="/users",tags=["Users"])
 
 
-@router.get("/me",response_model=UserSchema)
+@router.get("/me",response_model=UserSchema,dependencies=[Depends(check_permissions(Res.USERS,Act.READ))])
 def get_user_me(user:UserTokenDataSchema = Depends(get_token),
-                perm = Depends(check_permissions(Res.USERS,Act.READ)),
                 session:Session = Depends(get_session)
                 ):
     response = get_user(user.id,session)
     return response
 
 
-@router.patch("/me",response_model=UserSchema)
+@router.patch("/me",response_model=UserSchema,dependencies=[Depends(check_permissions(Res.USERS,Act.UPDATE))])
 def patch_user_me(currency:CurrencyType|None = None,
                   language:LanguageList|None = None,
                   user: UserTokenDataSchema = Depends(get_token),
-                  perm = Depends(check_permissions(Res.USERS,Act.UPDATE)),
                   session:Session = Depends(get_session)
                   ):
     user_data = UserPatch(currency = currency.value if currency else None,

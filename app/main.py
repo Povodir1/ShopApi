@@ -10,6 +10,7 @@ from app.api.user.order import router as order_router
 from app.api.user.favorite import router as favorite_router
 from app.api.admin.items import router as admin_item_router
 from app.api.admin.users import router as admin_user_router
+from app.api.admin.permissions import router as admin_permission_router
 from app.api.other.image import router as image_file_router
 from app.api.other.category import router as category_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,7 +42,7 @@ app.include_router(admin_item_router)
 app.include_router(admin_user_router)
 app.include_router(image_file_router)
 app.include_router(category_router)
-
+app.include_router(admin_permission_router)
 
 
 @app.exception_handler(InvalidDataError)

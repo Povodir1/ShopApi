@@ -2,7 +2,7 @@ from fastapi import APIRouter,Depends
 from pydantic import EmailStr
 
 from app.services.security import reset_password,is_correct_pass,code_ver
-from app.services.emai_sender import send_email
+from app.services.utils.emai_sender import send_email
 from app.database import get_session
 from sqlalchemy.orm.session import Session
 from app.exceptions import InvalidDataError

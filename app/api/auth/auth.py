@@ -9,7 +9,7 @@ from app.services.security import (create_access_token, is_unique_email, user_by
                                    create_refresh_token,block_refresh_token,block_access_token,
                                    create_code,user_auth,get_token)
 
-from app.services.emai_sender import send_email
+from app.services.utils.emai_sender import send_email
 from app.database import get_session
 from sqlalchemy.orm.session import Session
 from app.exceptions import InvalidDataError,ObjectAlreadyExistError
@@ -17,8 +17,6 @@ from app.exceptions import InvalidDataError,ObjectAlreadyExistError
 from app.database import auth_clients
 import json
 
-
-from app.database import access_blacklist_client,refresh_token_client
 router = APIRouter(tags=["Auth"])
 
 

@@ -4,7 +4,7 @@ import os.path
 from fastapi import UploadFile
 
 from app.models import Comment, CommentMedia
-from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema
+from app.schemas.comment import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema,CommentsViewSchema
 from sqlalchemy.orm import joinedload
 from app.exceptions import ObjectNotFoundError,ObjectAlreadyExistError
 from enum import Enum
@@ -16,7 +16,7 @@ class SortType(Enum):
     by_rating = "rating_desc"
     by_date = "date_desc"
 
-def serv_get_comments(item_id:int,sort_type:SortType,session):
+def serv_get_comments(item_id:int,limit_num:int,page:int,sort_type:SortType,session):
     comments_query = session.query(Comment).options(joinedload(Comment.users)).filter(Comment.item_id==item_id)
     if sort_type == SortType.by_date:
         comments_query = comments_query.order_by(Comment.created_at)
@@ -32,7 +32,9 @@ def serv_get_comments(item_id:int,sort_type:SortType,session):
                               rating = comment.rating,media=com_media,created_at=comment.created_at,
                               updated_at=comment.updated_at)
         comment_list.append(com)
-    return comment_list
+    max_page = (len(comment_list) // limit_num if len(comment_list) / limit_num == len(comment_list) // limit_num else len(comment_list) // limit_num + 1)
+    comment_list = comment_list[(page - 1) * limit_num:(page - 1) * limit_num + limit_num]
+    return CommentsViewSchema(comments = comment_list,current_page=page,max_page=max_page)
 
 async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema,media:list[UploadFile] |None,session):
     comment = session.query(Comment).filter(Comment.user_id ==user_id,Comment.item_id == item_id).first()

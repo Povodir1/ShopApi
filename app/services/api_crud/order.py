@@ -1,7 +1,7 @@
 
 from app.models import Order,BasketItem,OrderItem,User
 from app.schemas.order import OrderSchema,OrderItemSchema
-from app.services.emai_sender import send_email
+from app.services.utils.emai_sender import send_email
 from app.exceptions import NoMoneyError,ObjectNotFoundError
 def serv_create_order(user_id:int,session):
     #задать пустой заказ

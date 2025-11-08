@@ -4,7 +4,7 @@ import datetime
 from app.schemas.item import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
 from app.services.preference_logic import update_user_preference
-from app.services.currency_tools import convert_currency
+from app.services.utils.currency_tools import convert_currency
 from app.models.user import CurrencyType
 from sqlalchemy.orm import joinedload
 from fastapi import UploadFile

@@ -16,13 +16,13 @@ from app.models.user import CurrencyType
 router = APIRouter(prefix="/items",tags=["Items"])
 
 
-@router.get("/all",response_model=CatalogSchema)
+@router.get("/all",response_model=CatalogSchema,
+            dependencies=[Depends(check_permissions(Res.ITEMS,Act.READ))])
 def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
                  limit:int = 10,
                  page:int = 1,
                  sort_type:SortType = SortType.by_rating,
                  user:UserTokenDataSchema = Depends(get_token),
-                 perm = Depends(check_permissions(Res.ITEMS,Act.READ)),
                  session:Session = Depends(get_session)
                  ):
     response = get_all_items(limit,page,sort_type,filters,user.id,CurrencyType[user.currency],session)
@@ -30,10 +30,10 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
 
 
 
-@router.get("/{item_id}",response_model=ItemSoloSchema)
+@router.get("/{item_id}",response_model=ItemSoloSchema,
+            dependencies=[Depends(check_permissions(Res.ITEMS,Act.READ))])
 def get_item(item_id:int,
              user:UserTokenDataSchema = Depends(get_token),
-             perm = Depends(check_permissions(Res.ITEMS,Act.READ)),
              session:Session = Depends(get_session)
              ):
     response = serv_get_item(item_id,user.id if user else None,CurrencyType(user.currency),session)

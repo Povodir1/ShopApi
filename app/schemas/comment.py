@@ -16,8 +16,10 @@ class CommentSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+class CommentsViewSchema(BaseModel):
+    comments:list[CommentSchema]
+    current_page:int
+    max_page:int
 
 class CommentUpdateSchema(BaseModel):
     message: Optional[str] = None

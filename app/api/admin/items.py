@@ -15,7 +15,8 @@ router = APIRouter(prefix="/items",tags=["Items"])
 
 
 
-@router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED)
+@router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(check_permissions(Res.ITEMS, Act.CREATE))])
 def post_item(name: str = Form(...),
               price: float = Form(...),
               info: str|None = Form(None),
@@ -25,7 +26,6 @@ def post_item(name: str = Form(...),
               attributes: str = Form(...),
               tags: str = Form(...),
               category_id:int = Form(...),
-              perm = Depends(check_permissions(Res.ITEMS,Act.CREATE)),
               session:Session = Depends(get_session)
               ):
         new_item = ItemCreateSchema(name = name,price = price,info = info,
@@ -37,7 +37,8 @@ def post_item(name: str = Form(...),
 
 
 
-@router.patch("/{item_id}",response_model=ItemSoloSchema)
+@router.patch("/{item_id}",response_model=ItemSoloSchema,
+              dependencies=[Depends(check_permissions(Res.ITEMS, Act.UPDATE))])
 def patch_item( item_id:int|None,
                 name: str = Form(None),
                 price: Optional[float]= Form(None,),
@@ -49,7 +50,6 @@ def patch_item( item_id:int|None,
                 tags: str | None = Form(None),
                 is_active:Optional[bool]= Form(None),
                 category_id:int |None = Form(None),
-                perm = Depends(check_permissions(Res.ITEMS,Act.UPDATE)),
                 session:Session = Depends(get_session)
                 ):
 
@@ -62,7 +62,8 @@ def patch_item( item_id:int|None,
 
 
 
-@router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(check_permissions(Res.ITEMS, Act.DELETE))])
 def delete_item(item_id,session:Session = Depends(get_session)):
     serv_delete_item(item_id,session)
     return {"msg:":"Item deleted"}
