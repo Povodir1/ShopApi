@@ -3,11 +3,9 @@ from pydantic import EmailStr
 
 from app.api.auth.services import reset_password
 from app.utils.emai_sender import send_email
-from app.core.database import get_session
-from sqlalchemy.orm.session import Session
 from app.core.exceptions import InvalidDataError
 from app.core.security import create_code,is_correct_pass,code_ver
-
+from app.core.dependencies import SessionDep
 from app.core.database import password_reset_client
 import json
 
@@ -36,9 +34,10 @@ def verify_code_for_pass(email:EmailStr,
     return {"msg":"go to '/reset_password/confirm' to confirm new password"}
 
 @router.post("/reset_password/confirm")
-def confirm_pass(email:EmailStr,code:str,
-                 new_password:str = Depends(is_correct_pass),
-                 session:Session = Depends(get_session)
+def confirm_pass(email:EmailStr,
+                 code:str,
+                 session: SessionDep,
+                 new_password:str = Depends(is_correct_pass)
                  ):
     data_json = password_reset_client.get(email)
     data = json.loads(data_json)

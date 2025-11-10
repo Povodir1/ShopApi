@@ -1,8 +1,7 @@
 
 from app.api.items.services import serv_get_item, get_all_items,SortType
 from app.api.items.schemas import ItemFilterSchema,get_filters,CatalogSchema
-from app.api.users.schemas import UserTokenDataSchema
-from app.core.dependencies import get_token,check_permissions
+from app.core.dependencies import TokenDep,check_permissions,SessionDep
 
 from app.models.user import CurrencyType
 from typing import Optional
@@ -13,20 +12,18 @@ from app.api.items.services import create_item,serv_delete_item, serv_patch_item
 from app.api.items.schemas import ItemCreateSchema,ItemPatchSchema,ItemSoloSchema
 from app.models.permission import ResourceEnum as Res, ActionEnum as Act
 import json
-from app.core.database import get_session
-from sqlalchemy.orm.session import Session
 
 router = APIRouter(prefix="/items",tags=["Items"])
 
 
 @router.get("/all",response_model=CatalogSchema,
             dependencies=[Depends(check_permissions(Res.ITEMS,Act.READ))])
-def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
+def get_item_all(user:TokenDep,
+                 session:SessionDep,
+                 filters:ItemFilterSchema = Depends(get_filters),# replace into dependence
                  limit:int = 10,
                  page:int = 1,
-                 sort_type:SortType = SortType.by_rating,
-                 user:UserTokenDataSchema = Depends(get_token),
-                 session:Session = Depends(get_session)
+                 sort_type:SortType = SortType.by_rating
                  ):
     response = get_all_items(limit,page,sort_type,filters,user.id,CurrencyType[user.currency],session)
     return response
@@ -36,8 +33,8 @@ def get_item_all(filters:ItemFilterSchema = Depends(get_filters),
 @router.get("/{item_id}",response_model=ItemSoloSchema,
             dependencies=[Depends(check_permissions(Res.ITEMS,Act.READ))])
 def get_item(item_id:int,
-             user:UserTokenDataSchema = Depends(get_token),
-             session:Session = Depends(get_session)
+             user:TokenDep,
+             session:SessionDep
              ):
     response = serv_get_item(item_id,user.id if user else None,CurrencyType(user.currency),session)
     return response
@@ -45,7 +42,8 @@ def get_item(item_id:int,
 
 @router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(check_permissions(Res.ITEMS, Act.CREATE))])
-def post_item(name: str = Form(...),
+def post_item(session:SessionDep,
+              name: str = Form(...),
               price: float = Form(...),
               info: str|None = Form(None),
               images: list[UploadFile] | None = File(None),
@@ -53,8 +51,7 @@ def post_item(name: str = Form(...),
               stock: int = Form(0),
               attributes: str = Form(...),
               tags: str = Form(...),
-              category_id:int = Form(...),
-              session:Session = Depends(get_session)
+              category_id:int = Form(...)
               ):
         new_item = ItemCreateSchema(name = name,price = price,info = info,
                                     stock = stock,attributes = json.loads(attributes),
@@ -68,6 +65,7 @@ def post_item(name: str = Form(...),
 @router.patch("/{item_id}",response_model=ItemSoloSchema,
               dependencies=[Depends(check_permissions(Res.ITEMS, Act.UPDATE))])
 def patch_item( item_id:int|None,
+                session:SessionDep,
                 name: str = Form(None),
                 price: Optional[float]= Form(None,),
                 info: str|None = Form(None),
@@ -77,8 +75,7 @@ def patch_item( item_id:int|None,
                 attributes: str|None = Form(None),
                 tags: str | None = Form(None),
                 is_active:Optional[bool]= Form(None),
-                category_id:int |None = Form(None),
-                session:Session = Depends(get_session)
+                category_id:int |None = Form(None)
                 ):
 
         new_data = ItemPatchSchema(name = name,price = price,info = info,is_active = is_active,
@@ -92,7 +89,7 @@ def patch_item( item_id:int|None,
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT,
                dependencies=[Depends(check_permissions(Res.ITEMS, Act.DELETE))])
-def delete_item(item_id,session:Session = Depends(get_session)):
+def delete_item(item_id,session:SessionDep):
     serv_delete_item(item_id,session)
     return {"msg:":"Item deleted"}
 

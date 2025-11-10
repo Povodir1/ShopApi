@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated,TypeAlias
 
 from fastapi import Depends
 from app.api.users.schemas import UserTokenDataSchema
@@ -20,5 +20,5 @@ def check_permissions(resource:ResourceEnum,
             raise NoPermissionsError(detail="No permissions")
     return wrapped
 
-token_dependence = Annotated[UserTokenDataSchema,Depends(get_token)]
-session_dependence = Annotated[Session,Depends(get_session)]
+TokenDep:TypeAlias = Annotated[UserTokenDataSchema,Depends(get_token)]
+SessionDep:TypeAlias = Annotated[Session,Depends(get_session)]

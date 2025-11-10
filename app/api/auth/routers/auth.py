@@ -7,12 +7,10 @@ from app.api.users.services import create_user
 from app.api.auth.services import is_unique_email, user_by_email_pass
 from app.core.jwt import create_access_token,create_refresh_token,block_access_token,block_refresh_token,update_access_token,user_auth
 from app.core.security import is_correct_pass,create_code,code_ver
-from app.core.dependencies import get_token
+from app.core.dependencies import TokenDep,SessionDep
 
 
 from app.utils.emai_sender import send_email
-from app.core.database import get_session
-from sqlalchemy.orm.session import Session
 from app.core.exceptions import InvalidDataError,ObjectAlreadyExistError
 
 from app.core.database import auth_clients
@@ -22,8 +20,8 @@ router = APIRouter(tags=["Auth"])
 
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(),
-          session: Session = Depends(get_session)
+def login(session: SessionDep,
+          form_data: OAuth2PasswordRequestForm = Depends(),
           ):
 
     user_data =  user_by_email_pass(form_data.username,form_data.password,session)
@@ -35,8 +33,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(),
 
 
 @router.post("/logout")
-def logout(token:str = Depends(user_auth),
-           user:UserTokenDataSchema = Depends(get_token)
+def logout(user:TokenDep,
+           token:str = Depends(user_auth),
            ):
     block_access_token(token)
     block_refresh_token(user.id)
@@ -45,7 +43,7 @@ def logout(token:str = Depends(user_auth),
 
 @router.post("/refresh_token")
 def new_access_token(refresh_token:str,
-                     session: Session = Depends(get_session)
+                     session: SessionDep
                      ):
     new_token = update_access_token(refresh_token,session)
     return {"access_token": new_token,
@@ -55,7 +53,7 @@ def new_access_token(refresh_token:str,
 
 @router.post("/register/request",status_code=status.HTTP_200_OK)
 def request_code(user:UserRegister,
-                 session:Session = Depends(get_session)
+                 session:SessionDep
                  ):
     if not user.password == user.password_again:
         raise InvalidDataError("Пароли отличаются")
@@ -71,7 +69,7 @@ def request_code(user:UserRegister,
 @router.post("/register/confirm")
 def verify_code(email:EmailStr,
                 code:str,
-                session:Session = Depends(get_session)
+                session:SessionDep
                 ):
     data_json = auth_clients.get(email)
     data = json.loads(data_json)
