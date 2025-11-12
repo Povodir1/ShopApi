@@ -7,7 +7,7 @@ from app.api.comments.services import SortType
 
 from app.core.dependencies import TokenDep,check_permissions,SessionDep
 
-from app.models.permission import ResourceEnum as Res, ActionEnum as Act
+from app.core.enums import ResourceEnum as Res, ActionEnum as Act
 
 
 router = APIRouter(prefix="/comments",tags=["Comments"])

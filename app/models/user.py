@@ -2,17 +2,11 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, DECIMAL, Text, Boolean, Enum,CheckConstraint,ForeignKey
 from sqlalchemy.orm import relationship
+
 from app.models.base import Base
-import enum
 
-class LanguageList(enum.Enum):
-    ru = "ru"
-    en = "en"
+from app.core.enums import LanguageList,CurrencyType
 
-class CurrencyType(enum.Enum):
-    BYN = "BYN"
-    USD = "USD"
-    RUB = "RUB"
 
 class User(Base):
     __tablename__ = "users"

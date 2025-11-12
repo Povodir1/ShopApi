@@ -5,7 +5,7 @@ from app.api.favorite.schemas import FavouriteItemSchema
 
 from app.core.dependencies import TokenDep,check_permissions,SessionDep
 
-from app.models.permission import ResourceEnum as Res, ActionEnum as Act
+from app.core.enums import ResourceEnum as Res, ActionEnum as Act
 
 
 

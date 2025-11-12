@@ -1,7 +1,6 @@
 import datetime
 from sqlalchemy.orm import joinedload
 from fastapi import UploadFile
-from enum import Enum
 
 
 from app.api.items.schemas import (ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema,
@@ -15,17 +14,12 @@ from app.utils.currency_tools import convert_currency
 
 from app.core.exceptions import ObjectNotFoundError,InvalidDataError
 from app.core.config import settings
-
+from app.core.enums import SortType
 
 
 folder_path = settings.MEDIA_PATH/"items"
 
-class SortType(Enum):
-    by_rating = "rating_desc"
-    to_increase = "price_desc"
-    to_decrease = "price_asc"
-    by_date = "date_desc"
-    by_preference = "by_preference"
+
 
 
 

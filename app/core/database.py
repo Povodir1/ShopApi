@@ -49,10 +49,6 @@ access_blacklist_client = redis.Redis(host=settings.REDIS_HOST,
                      db = 3,
                      decode_responses=settings.REDIS_IS_DECODE)
 
-from app.models.permission import ResourceEnum, ActionEnum,Permission
-ses = next(get_session())
-per = [Permission(role_id = 2,action = act.value,resource = ResourceEnum.COMMENTS.value) for act in ActionEnum]
-ses.add_all(per)
-ses.commit()
+
 
 

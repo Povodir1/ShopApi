@@ -7,7 +7,7 @@ from app.api.users.services import change_role,ban_user
 from app.core.dependencies import check_permissions,TokenDep,SessionDep
 
 from app.models.user import CurrencyType,LanguageList
-from app.models.permission import ResourceEnum as Res, ActionEnum as Act
+from app.core.enums import ResourceEnum as Res, ActionEnum as Act
 
 
 

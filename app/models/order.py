@@ -1,20 +1,10 @@
-
-
-
 from datetime import datetime
 from sqlalchemy import Column, Integer, DateTime, ForeignKey,Enum,CheckConstraint
 from sqlalchemy.orm import relationship
 from app.models.base import Base
-import enum
 
-class StatusList(enum.Enum):
-    pending = "pending"
-    paid = "paid"
-    in_process = "in_process"
+from app.core.enums import StatusList,PaymentMethods
 
-class PaymentMethods(enum.Enum):
-    by_card = "by_card"
-    by_cash = "by_cash"
 
 class Order(Base):
     __tablename__ = "orders"

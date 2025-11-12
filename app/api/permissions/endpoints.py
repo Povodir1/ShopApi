@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from app.models.role import RoleEnum
-from app.models.permission import ResourceEnum as Res, ActionEnum as Act
-
 from app.api.permissions.services import db_get_all_permissions,db_add_permission,db_delete_permission,db_update_user_role
 
 from app.core.dependencies import TokenDep,check_permissions,SessionDep
+from app.core.enums import ResourceEnum as Res, ActionEnum as Act, RoleEnum
+
 
 
 

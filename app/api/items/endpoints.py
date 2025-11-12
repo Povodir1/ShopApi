@@ -10,7 +10,7 @@ from app.api.items.schemas import ItemCreateSchema,ItemPatchSchema,ItemSoloSchem
 from app.core.dependencies import TokenDep,check_permissions,SessionDep
 
 from app.models.user import CurrencyType
-from app.models.permission import ResourceEnum as Res, ActionEnum as Act
+from app.core.enums import ResourceEnum as Res, ActionEnum as Act
 
 
 
