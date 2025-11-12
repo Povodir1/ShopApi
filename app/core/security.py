@@ -1,10 +1,10 @@
 import random
-
 from passlib.context import CryptContext
 from pydantic import EmailStr
+import json
 
 from app.core.exceptions import InvalidDataError
-import json
+
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

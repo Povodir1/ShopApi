@@ -1,15 +1,18 @@
 import datetime
-import os.path
-
 from fastapi import UploadFile
+from enum import Enum
+from sqlalchemy.orm import joinedload
+
 
 from app.models import Comment, CommentMedia
-from app.api.comments.schemas import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema,CommentsViewSchema
-from sqlalchemy.orm import joinedload
-from app.core.exceptions import ObjectNotFoundError,ObjectAlreadyExistError
-from enum import Enum
 
-folder_path = os.path.join(os.path.abspath('../../services/api_crud'), f"app/media/comments")
+from app.api.comments.schemas import CommentSchema, CommentUpdateSchema,CommentCreateSchema,CommentMediaSchema,CommentsViewSchema
+
+from app.core.exceptions import ObjectNotFoundError,ObjectAlreadyExistError
+from app.core.config import settings
+
+
+folder_path = settings.MEDIA_PATH/"comments"
 
 
 class SortType(Enum):
@@ -43,15 +46,17 @@ async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchem
     db_com_medias = []
     com_medias = []
     if media:
-        [os.remove(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f"{comment.id}.{user_id}." in f]
+        for file in folder_path.iterdir():
+            if file.is_file() and f"{comment.id}." in file.name:
+                file.unlink()
 
         for ind, file in enumerate(media):
-            path = os.path.join(folder_path, f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}")
+            path = folder_path / f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_com_medias.append(CommentMedia(url=path, media_type=file.content_type, comment_id=comment.id))
-                com_medias.append(CommentMediaSchema(url=path, type=file.content_type))
+                db_com_medias.append(CommentMedia(url=str(path), media_type=file.content_type, comment_id=comment.id))
+                com_medias.append(CommentMediaSchema(url=str(path), type=file.content_type))
 
         session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
         session.add_all(db_com_medias)
@@ -81,12 +86,12 @@ async def serv_create_comment(data:CommentCreateSchema,user_id:int,media:list[Up
 
     if media:
         for ind,file in enumerate(media):
-            path = os.path.join(folder_path,f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}")
+            path = folder_path / f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_com_medias.append(CommentMedia(url = path,media_type = file.content_type,comment_id = comment.id))
-                com_medias.append(CommentMediaSchema(url=path,type = file.content_type))
+                db_com_medias.append(CommentMedia(url = str(path),media_type = file.content_type,comment_id = comment.id))
+                com_medias.append(CommentMediaSchema(url=str(path),type = file.content_type))
 
         session.add_all(db_com_medias)
     return CommentSchema(id=comment.id, username=comment.users.name, message=comment.message,
@@ -100,7 +105,9 @@ def serv_delete_comment(item_id:int,user_id:int,session):
     if not comment:
         raise ObjectNotFoundError("Комментарий не найден")
     session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
-    [os.remove(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f"{comment.id}.{user_id}." in f]
+    for file in folder_path.iterdir():
+        if file.is_file() and f"{comment.id}." in file.name:
+            file.unlink()
     session.delete(comment)
     return True
 

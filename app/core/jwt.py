@@ -2,11 +2,16 @@
 from jose import jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends
+
 from app.api.users.schemas import UserTokenDataSchema
-from app.core.config import settings
+
 from app.models.user import User
+
+from app.core.config import settings
 from app.core.exceptions import ObjectNotFoundError,InvalidDataError
 from app.core.database import refresh_token_client,access_blacklist_client
+
+
 
 ALGORITHM = "HS256"
 user_auth = OAuth2PasswordBearer(tokenUrl="/login")

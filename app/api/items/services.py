@@ -1,17 +1,24 @@
 import datetime
-
-
-from app.api.items.schemas import ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema, ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema
-from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
-from app.utils.preference_logic import update_user_preference
-from app.utils.currency_tools import convert_currency
-from app.models.user import CurrencyType
 from sqlalchemy.orm import joinedload
 from fastapi import UploadFile
 from enum import Enum
-import os
+
+
+from app.api.items.schemas import (ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema,
+                                   ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema)
+
+from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
+from app.models.user import CurrencyType
+
+from app.utils.preference_logic import update_user_preference
+from app.utils.currency_tools import convert_currency
+
 from app.core.exceptions import ObjectNotFoundError,InvalidDataError
-folder_path = os.path.join(os.path.abspath('../../services/api_crud'), f"app/media/items")
+from app.core.config import settings
+
+
+
+folder_path = settings.MEDIA_PATH/"items"
 
 class SortType(Enum):
     by_rating = "rating_desc"
@@ -56,12 +63,11 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
 
     res_data = []
     for item in items:
+        rating = None
         if item.comments:
             ratings = [com.rating for com in item.comments if com.rating is not None]
             if ratings:
                 rating = round(sum(ratings) / len(ratings),1)
-        else:
-            rating = None
 
         if item.images:
             res_images = [im for im in item.images if im.is_main == True][0].url
@@ -131,11 +137,11 @@ async def create_item(add_item:ItemCreateSchema, media: list[UploadFile] | None 
     db_images = []
     if media:
         for ind, file in enumerate(media):
-            path = os.path.join(folder_path, f"{item.id}.{ind}.{file.filename.split('.')[1]}")
+            path = folder_path / f"{item.id}.{ind}.{file.filename.split('.')[1]}"
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_images.append(Image(url = path, is_main = add_item.image_metadata[ind],item_id = item.id))
+                db_images.append(Image(url = str(path), is_main = add_item.image_metadata[ind],item_id = item.id))
     session.add_all(db_images)
 
     attributes = session.query(Attribute).filter(Attribute.category_id == add_item.category_id).all()
@@ -190,16 +196,17 @@ async def serv_patch_item(item_id:int, new_data:ItemPatchSchema,media:list[Uploa
         if len(media) > 5:
             raise InvalidDataError("допускается не больше 5 фото на товар")
 
-        [os.remove(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if
-         os.path.isfile(os.path.join(folder_path, f)) and f"{item.id}." in f]
+        for file in folder_path.iterdir():
+            if file.is_file() and f"{item.id}." in file.name:
+                file.unlink()
 
         db_images = []
         for ind, file in enumerate(media):
-            path = os.path.join(folder_path, f"{item.id}.{ind}.{file.filename.split('.')[1]}")
+            path = folder_path/ f"{item.id}.{ind}.{file.filename.split('.')[1]}"
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_images.append(Image(url=path, is_main=new_data.image_metadata[ind], item_id=item.id))
+                db_images.append(Image(url=str(path), is_main=new_data.image_metadata[ind], item_id=item.id))
 
         session.query(Image).filter_by(item_id = item.id).delete()
         session.add_all(db_images)

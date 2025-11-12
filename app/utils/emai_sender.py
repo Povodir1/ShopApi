@@ -1,7 +1,10 @@
 import smtplib
 from email.mime.text import MIMEText
-from app.core.config import settings
 from pydantic import EmailStr
+
+from app.core.config import settings
+
+
 
 def send_email(email:str|EmailStr,message:str,title:str = "Новое сообщение"):
     sender = settings.EMAIL_SENDER

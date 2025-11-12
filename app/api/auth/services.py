@@ -1,10 +1,10 @@
 import datetime
+from pydantic import EmailStr
 
 from app.api.users.schemas import UserTokenDataSchema, UserSchema
 
-from pydantic import EmailStr
-
 from app.models.user import User
+
 from app.core.exceptions import ObjectNotFoundError,InvalidDataError
 from app.core.security import verify_pass,hash_pass
 

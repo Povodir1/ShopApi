@@ -1,13 +1,18 @@
 from typing import Annotated,TypeAlias
-
 from fastapi import Depends
+from sqlalchemy.orm import Session
+
 from app.api.users.schemas import UserTokenDataSchema
+
 from app.models.permission import Permission,ActionEnum,ResourceEnum
 from app.models.role import Role
+
 from app.core.exceptions import NoPermissionsError
-from sqlalchemy.orm import Session
 from app.core.database import get_session
+
 from .jwt import get_token
+
+
 
 def check_permissions(resource:ResourceEnum,
                       action:ActionEnum):
@@ -19,6 +24,7 @@ def check_permissions(resource:ResourceEnum,
         if not user_permissions:
             raise NoPermissionsError(detail="No permissions")
     return wrapped
+
 
 TokenDep:TypeAlias = Annotated[UserTokenDataSchema,Depends(get_token)]
 SessionDep:TypeAlias = Annotated[Session,Depends(get_session)]

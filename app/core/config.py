@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
-
+from pathlib import Path
 load_dotenv()
 
 class Settings(BaseSettings):
@@ -11,5 +11,6 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: int
     REDIS_IS_DECODE:bool
+    MEDIA_PATH:Path = Path(__file__).resolve().parent.parent/"media"
 
 settings = Settings()

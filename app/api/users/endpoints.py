@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends
+
 from app.api.users.services import get_user,patch_user
 from app.api.users.schemas import UserPatch,UserSchema
+from app.api.users.services import change_role,ban_user
+
 from app.core.dependencies import check_permissions,TokenDep,SessionDep
+
 from app.models.user import CurrencyType,LanguageList
 from app.models.permission import ResourceEnum as Res, ActionEnum as Act
 
-from app.api.users.services import change_role,ban_user
 
 
 router = APIRouter(prefix="/users",tags=["Users"])

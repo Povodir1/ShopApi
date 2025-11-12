@@ -1,8 +1,8 @@
+from app.models import User,Item,UserTagPreference
 
-from app.models.user import User
-from app.models.item import Item
-from app.models.user_tag_preference import UserTagPreference
 from app.core.exceptions import ObjectNotFoundError
+
+
 
 def update_user_preference(user_id: int, item_id: int, session):
     user = session.query(User).filter_by(id=user_id).first()

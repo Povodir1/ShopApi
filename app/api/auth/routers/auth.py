@@ -1,20 +1,20 @@
 from fastapi import APIRouter, status,Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
+import json
 
 from app.api.users.schemas import UserRegister, UserTokenDataSchema
 from app.api.users.services import create_user
 from app.api.auth.services import is_unique_email, user_by_email_pass
+
 from app.core.jwt import create_access_token,create_refresh_token,block_access_token,block_refresh_token,update_access_token,user_auth
 from app.core.security import is_correct_pass,create_code,code_ver
 from app.core.dependencies import TokenDep,SessionDep
-
+from app.core.exceptions import InvalidDataError,ObjectAlreadyExistError
+from app.core.database import auth_clients
 
 from app.utils.emai_sender import send_email
-from app.core.exceptions import InvalidDataError,ObjectAlreadyExistError
 
-from app.core.database import auth_clients
-import json
 
 router = APIRouter(tags=["Auth"])
 

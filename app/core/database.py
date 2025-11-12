@@ -1,9 +1,11 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker,Session
-from app.core.config import settings
-from app.models.base import Base
 import redis
+
+from app.core.config import settings
+
+from app.models.base import Base
 
 
 engine = create_engine(settings.DB_URL)
@@ -46,5 +48,11 @@ access_blacklist_client = redis.Redis(host=settings.REDIS_HOST,
                      port = settings.REDIS_PORT,
                      db = 3,
                      decode_responses=settings.REDIS_IS_DECODE)
+
+from app.models.permission import ResourceEnum, ActionEnum,Permission
+ses = next(get_session())
+per = [Permission(role_id = 2,action = act.value,resource = ResourceEnum.COMMENTS.value) for act in ActionEnum]
+ses.add_all(per)
+ses.commit()
 
 

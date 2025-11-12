@@ -1,5 +1,4 @@
-from fastapi import FastAPI,Request,status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
 from app.api.users.endpoints import router as user_router
 from app.api.items.endpoints import router as item_router
@@ -13,7 +12,7 @@ from app.api.categoryes.endpoints import router as category_router
 from app.api.images.endpoints import router as image_router
 
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.core.exceptions import register_exception_handlers
 
 app = FastAPI(title="E-Shop API", version="1.0.0")
 
@@ -37,4 +36,5 @@ app.include_router(category_router)
 app.include_router(permission_router)
 app.include_router(image_router)
 
+register_exception_handlers(app)
 

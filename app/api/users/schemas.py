@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr,Field
 from datetime import datetime
 
 
@@ -12,7 +12,7 @@ class UserRegister(BaseModel):
     email: EmailStr
     password:str
     password_again:str
-    name:str
+    name:str = Field(max_length=20)
 
 
 class UserTokenDataSchema(BaseModel):

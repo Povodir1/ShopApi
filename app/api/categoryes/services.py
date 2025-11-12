@@ -1,4 +1,6 @@
 from app.models.category import Category
+
+
 def serv_get_categories(session):
     categories = session.query(Category).all()
 
