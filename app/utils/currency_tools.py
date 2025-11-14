@@ -1,7 +1,6 @@
 import requests
 from app.models.user import CurrencyType
-
-
+#from fastapi import BackgroundTasks
 
 currency_data ={}
 

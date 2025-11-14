@@ -8,7 +8,7 @@ from app.core.enums import ResourceEnum as Res, ActionEnum as Act, RoleEnum
 
 
 
-router = APIRouter(prefix="/admin",tags=["Admin"])
+router = APIRouter(prefix="/admin",tags=["Permissions","Admin"])
 
 @router.get("/permissions",dependencies=[Depends(check_permissions(Res.PERMISSIONS, Act.READ))])
 def get_permissions(session: SessionDep):
@@ -34,8 +34,8 @@ def delete_permissions(role:RoleEnum,
 
 @router.patch("/role",dependencies=[Depends(check_permissions(Res.ROLES, Act.UPDATE))])
 def update_role(role:RoleEnum,
-                user:TokenDep,
+                user_id:int,
                 session: SessionDep
                 ):
-    response = db_update_user_role(user.id,role, session)
+    response = db_update_user_role(user_id,role, session)
     return response

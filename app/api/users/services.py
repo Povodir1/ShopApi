@@ -38,14 +38,7 @@ def patch_user(user_id:int, new_data:UserPatch,session):
     return UserSchema(id = user.id,name= user.name,role = user.roles.name,
                       email = user.email, money = user.money,created_at=user.created_at,
                       currency=user.currency,language=user.language)
-def change_role(user_id:int,role: str,session):
-    user = session.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise ObjectNotFoundError("User не найден")
-    user.role = role
-    return UserSchema(id = user.id,name= user.name,role = user.roles.name,
-                      email = user.email, money = user.money,created_at=user.created_at,
-                      currency=user.currency,language=user.language)
+
 
 def ban_user(user_id:int,is_banned:bool,session):
     user = session.query(User).filter(User.id == user_id).first()

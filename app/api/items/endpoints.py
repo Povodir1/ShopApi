@@ -41,7 +41,9 @@ def get_item(item_id:int,
     return response
 
 
-@router.post("/create",response_model=ItemSoloSchema,status_code=status.HTTP_201_CREATED,
+@router.post("/create",response_model=ItemSoloSchema,
+             status_code=status.HTTP_201_CREATED,
+             tags=["Admin"],
              dependencies=[Depends(check_permissions(Res.ITEMS, Act.CREATE))])
 def post_item(session:SessionDep,
               name: str = Form(...),
@@ -64,6 +66,7 @@ def post_item(session:SessionDep,
 
 
 @router.patch("/{item_id}",response_model=ItemSoloSchema,
+              tags=["Admin"],
               dependencies=[Depends(check_permissions(Res.ITEMS, Act.UPDATE))])
 def patch_item( item_id:int|None,
                 session:SessionDep,
@@ -89,6 +92,7 @@ def patch_item( item_id:int|None,
 
 
 @router.delete("/{item_id}",status_code=status.HTTP_204_NO_CONTENT,
+               tags=["Admin"],
                dependencies=[Depends(check_permissions(Res.ITEMS, Act.DELETE))])
 def delete_item(item_id,session:SessionDep):
     serv_delete_item(item_id,session)

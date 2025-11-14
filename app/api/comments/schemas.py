@@ -17,6 +17,7 @@ class CommentSchema(BaseModel):
 
 class CommentsViewSchema(BaseModel):
     comments:list[CommentSchema]
+    all_comments_count:int
     current_page:int
     max_page:int
 

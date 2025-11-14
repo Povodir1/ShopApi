@@ -4,7 +4,7 @@ from fastapi import UploadFile
 
 
 from app.api.items.schemas import (ItemSoloSchema,ItemCatalogSchema,ItemCreateSchema,
-                                   ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema)
+                                   ItemPatchSchema,ItemFilterSchema,AttributeData,CatalogSchema,ImageSchema)
 
 from app.models import Item, Category, Image, User, Attribute, AttributeValue, Tag,ItemTag
 from app.models.user import CurrencyType
@@ -16,10 +16,7 @@ from app.core.exceptions import ObjectNotFoundError,InvalidDataError
 from app.core.config import settings
 from app.core.enums import SortType
 
-
 folder_path = settings.MEDIA_PATH/"items"
-
-
 
 
 
@@ -27,6 +24,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
     items_query = session.query(Item).options(joinedload(Item.comments),
                                               joinedload(Item.images),
                                               joinedload(Item.categories)).filter(Item.is_active == True)
+
     #фильтрация
     if filters.min_price:
         items_query = items_query.filter(Item.price >= convert_currency(currency_type,CurrencyType.USD,filters.min_price))
@@ -43,6 +41,9 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
 
         all_category_ids = get_all_child_category_ids(filters.category)
         items_query = items_query.filter(Item.category_id.in_(all_category_ids))
+
+    if filters.search_q:
+        items_query = items_query.filter(Item.name.ilike(f"%{filters.search_q}%"))
 
     #сортировка по базовым полям
     if sort_type == SortType.to_decrease:
@@ -64,7 +65,7 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
                 rating = round(sum(ratings) / len(ratings),1)
 
         if item.images:
-            res_images = [im for im in item.images if im.is_main == True][0].url
+            res_images = str(folder_path/[im for im in item.images if im.is_main == True][0].url)
             if not res_images:
                 res_images = None
         else:
@@ -87,6 +88,8 @@ def get_all_items(limit_num:int, page:int,sort_type:SortType,filters:ItemFilterS
             item_score = sum([score for tag_id, score in user_tags_dict.items() if tag_id in applied_item_tags])
             return item_score
         res_data.sort(key = lambda x:get_item_score(x.id))
+
+
     max_page = (len(res_data)//limit_num if len(res_data)/limit_num == len(res_data)//limit_num else len(res_data)//limit_num + 1)
     res_data = res_data[(page-1)*limit_num:(page-1)*limit_num+limit_num]
 
@@ -112,7 +115,9 @@ def serv_get_item(item_id:int,user_id:int,currency_type:CurrencyType,session):
         update_user_preference(user_id,item_id,session)
 
     item.views_count +=1
-    return ItemSoloSchema(id = item.id,name = item.name,images = item.images, attributes=attr_arr,
+
+    images = [ImageSchema(url = str(folder_path/im.url),is_main = im.is_main) for im in item.images]
+    return ItemSoloSchema(id = item.id,name = item.name,images = images, attributes=attr_arr,
                           price = convert_currency(CurrencyType.USD,currency_type,item.price),rating = rating,info= item.info,stock = item.stock)
 
 
@@ -131,11 +136,12 @@ async def create_item(add_item:ItemCreateSchema, media: list[UploadFile] | None 
     db_images = []
     if media:
         for ind, file in enumerate(media):
-            path = folder_path / f"{item.id}.{ind}.{file.filename.split('.')[1]}"
+            file_name = f"{item.id}.{ind}.{file.filename.split('.')[1]}"
+            path = folder_path / file_name
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_images.append(Image(url = str(path), is_main = add_item.image_metadata[ind],item_id = item.id))
+                db_images.append(Image(url = str(file_name), is_main = add_item.image_metadata[ind],item_id = item.id))
     session.add_all(db_images)
 
     attributes = session.query(Attribute).filter(Attribute.category_id == add_item.category_id).all()
@@ -154,7 +160,8 @@ async def create_item(add_item:ItemCreateSchema, media: list[UploadFile] | None 
     session.flush()
     attr_arr = [{f"{attr.attributes.name}": AttributeData(value=attr.value,unit=attr.unit) } for
                 attr in item.attributes_value]
-    return ItemSoloSchema(id = item.id,name = item.name,images = item.images,attributes=attr_arr,
+    images = [ImageSchema(url = str(folder_path/im.url),is_main = im.is_main) for im in item.images]
+    return ItemSoloSchema(id = item.id,name = item.name,images = images, attributes=attr_arr,
                           price = item.price,rating = None,info= item.info,stock = item.stock)
 
 
@@ -196,11 +203,12 @@ async def serv_patch_item(item_id:int, new_data:ItemPatchSchema,media:list[Uploa
 
         db_images = []
         for ind, file in enumerate(media):
-            path = folder_path/ f"{item.id}.{ind}.{file.filename.split('.')[1]}"
+            file_name = f"{item.id}.{ind}.{file.filename.split('.')[1]}"
+            path = folder_path/ file_name
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_images.append(Image(url=str(path), is_main=new_data.image_metadata[ind], item_id=item.id))
+                db_images.append(Image(url=str(file_name), is_main=new_data.image_metadata[ind], item_id=item.id))
 
         session.query(Image).filter_by(item_id = item.id).delete()
         session.add_all(db_images)
@@ -238,8 +246,9 @@ async def serv_patch_item(item_id:int, new_data:ItemPatchSchema,media:list[Uploa
     attr_arr = [{f"{attr.attributes.name}": AttributeData(value=attr.value, unit=attr.unit)} for
                 attr in item.attributes_value]
 
-    return ItemSoloSchema(id=item.id, name=item.name, images=item.images, attributes=attr_arr,
-                          price=item.price, rating=rating, info=item.info, stock=item.stock)
+    images = [ImageSchema(url = str(folder_path/im.url),is_main = im.is_main) for im in item.images]
+    return ItemSoloSchema(id = item.id,name = item.name,images = images, attributes=attr_arr,
+                          price = item.price,rating = rating,info= item.info,stock = item.stock)
 
 
 

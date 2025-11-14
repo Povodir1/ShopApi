@@ -29,7 +29,7 @@ def serv_get_comments(item_id:int,limit_num:int,page:int,sort_type:SortType,sess
 
     comment_list = []
     for comment in comments:
-        com_media = [CommentMediaSchema(url = med.url,type = med.media_type) for med in comment.comment_medias]
+        com_media = [CommentMediaSchema(url = str(folder_path/med.url),type = med.media_type) for med in comment.comment_medias]
 
         com  = CommentSchema(id =comment.id,username=comment.users.name,message=comment.message,
                               rating = comment.rating,media=com_media,created_at=comment.created_at,
@@ -37,7 +37,7 @@ def serv_get_comments(item_id:int,limit_num:int,page:int,sort_type:SortType,sess
         comment_list.append(com)
     max_page = (len(comment_list) // limit_num if len(comment_list) / limit_num == len(comment_list) // limit_num else len(comment_list) // limit_num + 1)
     comment_list = comment_list[(page - 1) * limit_num:(page - 1) * limit_num + limit_num]
-    return CommentsViewSchema(comments = comment_list,current_page=page,max_page=max_page)
+    return CommentsViewSchema(comments = comment_list,all_comments_count=len(comments),current_page=page,max_page=max_page)
 
 async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchema,media:list[UploadFile] |None,session):
     comment = session.query(Comment).filter(Comment.user_id ==user_id,Comment.item_id == item_id).first()
@@ -51,11 +51,12 @@ async def serv_patch_comment(item_id:int,user_id:int,new_data:CommentUpdateSchem
                 file.unlink()
 
         for ind, file in enumerate(media):
-            path = folder_path / f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
+            file_name = f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
+            path = folder_path / file_name
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_com_medias.append(CommentMedia(url=str(path), media_type=file.content_type, comment_id=comment.id))
+                db_com_medias.append(CommentMedia(url=str(file_name), media_type=file.content_type, comment_id=comment.id))
                 com_medias.append(CommentMediaSchema(url=str(path), type=file.content_type))
 
         session.query(CommentMedia).filter(CommentMedia.comment_id == comment.id).delete()
@@ -86,11 +87,12 @@ async def serv_create_comment(data:CommentCreateSchema,user_id:int,media:list[Up
 
     if media:
         for ind,file in enumerate(media):
-            path = folder_path / f"{comment.id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
+            file_name = f"{data.item_id}.{user_id}.{ind}.{file.filename.split('.')[1]}"
+            path = folder_path / file_name
             with open(path, 'wb') as f:
                 content = await file.read()
                 f.write(content)
-                db_com_medias.append(CommentMedia(url = str(path),media_type = file.content_type,comment_id = comment.id))
+                db_com_medias.append(CommentMedia(url = str(file_name),media_type = file.content_type,comment_id = comment.id))
                 com_medias.append(CommentMediaSchema(url=str(path),type = file.content_type))
 
         session.add_all(db_com_medias)

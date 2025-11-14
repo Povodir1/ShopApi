@@ -67,14 +67,18 @@ class ItemFilterSchema(BaseModel):
     min_price: int | None = Field(None, ge=0, description="Минимальная цена")
     max_price: int | None = Field(None, ge=0, description="Максимальная цена")
     category: int | None = Field(None, description="ID категории")
+    search_q:str|None = Field(None, description="Поисковая строка")
 
 def get_filters(
     min_price: int | None = Query(None, ge=0),
     max_price: int | None = Query(None, ge=0),
-    category: int | None = Query(None)
+    category: int | None = Query(None),
+    search_q: str | None = Query(None)
+
 ) -> ItemFilterSchema:
     return ItemFilterSchema(
         min_price=min_price,
         max_price=max_price,
-        category=category
+        category=category,
+        search_q=search_q
     )
